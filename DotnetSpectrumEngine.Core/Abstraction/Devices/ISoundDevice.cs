@@ -1,4 +1,5 @@
 ﻿using DotnetSpectrumEngine.Core.Abstraction.Devices.Sound;
+using DotnetSpectrumEngine.Core.Devices.Sound;
 
 namespace DotnetSpectrumEngine.Core.Abstraction.Devices
 {
@@ -16,7 +17,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <summary>
         /// The last PSG state collected during the last frame.
         /// </summary>
-        IPsgState PsgState { get; }
+        PsgState PsgState { get; }
 
         /// <summary>
         /// The index of the last addressed register.

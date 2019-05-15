@@ -5,7 +5,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
     /// <summary>
     /// This interface represents the device that manages the tape.
     /// </summary>
-    public interface ITapeDevice : ISpectrumBoundDevice
+    public interface ITapeDevice : ICpuOperationBoundDevice, ISpectrumBoundDevice
     {
         /// <summary>
         /// Allow the device to react to the start of a new frame.

@@ -15,7 +15,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <summary>
         /// Table of ULA tact action information entries.
         /// </summary>
-        IRenderingTact[] RenderingTactTable { get; }
+        RenderingTact[] RenderingTactTable { get; }
 
         /// <summary>
         /// Indicates the refresh rate calculated from the base clock frequency
