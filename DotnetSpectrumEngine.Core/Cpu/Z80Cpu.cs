@@ -28,7 +28,7 @@ namespace DotnetSpectrumEngine.Core.Cpu
         private readonly IPortDevice _portDevice;
         private readonly ITbBlueControlDevice _tbblueDevice;
         private readonly IList<byte> _instructionBytes = new List<byte>(4);
-        private ushort _lastPC;
+        private ushort _lastPc;
 
         /// <summary>
         /// This flag signs if the Z80 extended instruction set (Spectrum Next)
@@ -120,12 +120,6 @@ namespace DotnetSpectrumEngine.Core.Cpu
         public bool IsInOpExecution => _isInOpExecution;
 
         /// <summary>
-        /// This flag indicates if the CPU entered into a maskable
-        /// interrupt method as a result of an INT signal
-        /// </summary>
-        public bool MaskableInterruptModeEntered { get; private set; }
-
-        /// <summary>
         /// CPU registers (General/Special)
         /// </summary>
         /// <summary>
@@ -139,7 +133,7 @@ namespace DotnetSpectrumEngine.Core.Cpu
             bool allowExtendedInstructionSet = false, ITbBlueControlDevice tbBlueDevice = null)
         {
             _instructionBytes.Clear();
-            _lastPC = 0;
+            _lastPc = 0;
             _memoryDevice = memoryDevice ?? throw new ArgumentNullException(nameof(memoryDevice));
             _portDevice = portDevice ?? throw new ArgumentException(nameof(portDevice));
             _tbblueDevice = tbBlueDevice;
@@ -346,7 +340,6 @@ namespace DotnetSpectrumEngine.Core.Cpu
             if (ProcessCpuSignals()) return;
 
             // --- Get operation code and refresh the memory
-            MaskableInterruptModeEntered = false;
             var opCode = ReadCodeMemory();
             ClockP3();
             _registers.PC++;
@@ -620,7 +613,7 @@ namespace DotnetSpectrumEngine.Core.Cpu
         /// <summary>
         /// Processes the specified instruction with the given process action
         /// </summary>
-        /// <param name="opCode">Operation vode</param>
+        /// <param name="opCode">Operation code</param>
         /// <param name="process">Process action</param>
         private void ProcessInstruction(byte opCode, Action process)
         {
@@ -630,15 +623,15 @@ namespace DotnetSpectrumEngine.Core.Cpu
             StackDebugSupport.RetExecuted = false;
             StackDebugSupport.StepOutAddress = null;
             OperationExecuting?.Invoke(this,
-                new Z80InstructionExecutionEventArgs(_lastPC, _instructionBytes, opCode));
+                new Z80InstructionExecutionEventArgs(_lastPc, _instructionBytes, opCode));
             process();
             OperationExecuted?.Invoke(this,
-                new Z80InstructionExecutionEventArgs(_lastPC, _instructionBytes, opCode, Registers.PC));
+                new Z80InstructionExecutionEventArgs(_lastPc, _instructionBytes, opCode, Registers.PC));
             _prefixMode = OpPrefixMode.None;
             _indexMode = OpIndexMode.None;
             _isInOpExecution = false;
             _instructionBytes.Clear();
-            _lastPC = Registers.PC;
+            _lastPc = Registers.PC;
         }
 
         /// <summary>
@@ -692,7 +685,7 @@ namespace DotnetSpectrumEngine.Core.Cpu
         private void ExecuteReset()
         {
             _instructionBytes.Clear();
-            _lastPC = 0;
+            _lastPc = 0;
             _iff1 = false;
             _iff2 = false;
             _interruptMode = 0;
@@ -765,7 +758,7 @@ namespace DotnetSpectrumEngine.Core.Cpu
                 // --- Interrupt Mode 1:
                 // --- The CPU responds to an interrupt by executing a restart
                 // --- at address 0038h.As a result, the response is identical to 
-                // --- that of a nonmaskable interrupt except that the call 
+                // --- that of a non-maskable interrupt except that the call 
                 // --- location is 0038h instead of 0066h.
                 case 1:
                     // --- In this implementation, we do cannot emulate a device
@@ -814,11 +807,10 @@ namespace DotnetSpectrumEngine.Core.Cpu
                     Tacts));
             StackDebugSupport.PushStepOutAddress(oldPc);
             StackDebugSupport.CallExecuted = true;
-            MaskableInterruptModeEntered = true;
         }
 
         /// <summary>
-        /// Takes care of refreching the dynamic memory
+        /// Takes care of refretching the dynamic memory
         /// </summary>
         /// <remarks>
         /// The Z80 CPU contains a memory refresh counter, enabling dynamic 

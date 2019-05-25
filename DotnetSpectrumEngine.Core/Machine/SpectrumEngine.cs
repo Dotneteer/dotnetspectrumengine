@@ -238,12 +238,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         public int InterruptTact => ScreenConfiguration.InterruptTact;
 
         /// <summary>
-        /// This property indicates if the machine currently runs the
-        /// maskable interrupt method.
-        /// </summary>
-        public bool RunsInMaskableInterrupt { get; private set; }
-
-        /// <summary>
         /// Allows to set a clock frequency multiplier value (1, 2, 4, or 8).
         /// </summary>
         public int ClockMultiplier { get; }
@@ -347,7 +341,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             Overflow = 0;
             _frameCompleted = true;
             _lastBreakpoint = null;
-            RunsInMaskableInterrupt = false;
 
             // --- Attach providers
             AttachProvider(RomProvider);
@@ -449,7 +442,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             _frameCompleted = true;
             Cpu.Reset();
             Cpu.ReleaseResetSignal();
-            RunsInMaskableInterrupt = false;
             foreach (var device in _spectrumDevices)
             {
                 device.Reset();
@@ -529,7 +521,6 @@ namespace DotnetSpectrumEngine.Core.Machine
 
             // --- We use these variables to calculate wait time at the end of the frame
             var cycleStartTime = Clock.GetCounter();
-            var cycleStartTact = Cpu.Tacts;
             var cycleFrameCount = 0;
 
             // --- We use this variables to check whether to stop in Debug mode
@@ -555,17 +546,6 @@ namespace DotnetSpectrumEngine.Core.Machine
                 // --- processes everything within a physical frame (0.019968 second)
                 while (!_frameCompleted)
                 {
-                    // --- Check for leaving maskable interrupt mode
-                    if (RunsInMaskableInterrupt)
-                    {
-                        if (Cpu.Registers.PC == 0x0052)
-                        {
-                            // --- We leave the maskable interrupt mode when the
-                            // --- current instruction completes
-                            RunsInMaskableInterrupt = false;
-                        }
-                    }
-
                     // --- Check debug mode when a CPU instruction has been entirely executed
                     if (!Cpu.IsInOpExecution)
                     {
@@ -578,14 +558,6 @@ namespace DotnetSpectrumEngine.Core.Machine
 
                         // --- The next instruction is about to be executed
                         executedInstructionCount++;
-
-                        // --- Check for timeout
-                        if (options.TimeoutTacts > 0
-                            && cycleStartTact + options.TimeoutTacts < Cpu.Tacts)
-                        {
-                            ExecutionCompletionReason = ExecutionCompletionReason.Timeout;
-                            return false;
-                        }
 
                         // --- Check for reaching the termination point
                         if (options.EmulationMode == EmulationMode.UntilExecutionPoint)
@@ -607,12 +579,6 @@ namespace DotnetSpectrumEngine.Core.Machine
                                 ExecutionCompletionReason = ExecutionCompletionReason.TerminationPointReached;
                                 return true;
                             }
-                        }
-
-                        // --- Check for entering maskable interrupt mode
-                        if (Cpu.MaskableInterruptModeEntered)
-                        {
-                            RunsInMaskableInterrupt = true;
                         }
 
                         // --- Check for a debugging stop point
@@ -669,18 +635,15 @@ namespace DotnetSpectrumEngine.Core.Machine
                 OnFrameCompleted();
 
                 // --- Exit if the emulation mode specifies so
-                if (options.EmulationMode == EmulationMode.UntilFrameEnds)
+                if (options.EmulationMode == EmulationMode.UntilRenderFrameEnds)
                 {
                     ExecutionCompletionReason = ExecutionCompletionReason.FrameCompleted;
                     return true;
                 }
 
                 // --- Wait while the frame time elapses
-                if (!ExecuteCycleOptions.FastVmMode)
-                {
-                    var nextFrameCounter = cycleStartTime + cycleFrameCount * PhysicalFrameClockCount;
-                    Clock.WaitUntil((long)nextFrameCounter, token);
-                }
+                var nextFrameCounter = cycleStartTime + cycleFrameCount * PhysicalFrameClockCount;
+                Clock.WaitUntil((long)nextFrameCounter, token);
 
                 // --- Start a new frame and carry on
                 Overflow = CurrentFrameTact % _frameTacts;
@@ -709,40 +672,27 @@ namespace DotnetSpectrumEngine.Core.Machine
                 return false;
             }
 
-            // Check if the maskable interrupt routine breakpoints should be skipped
-            if (RunsInMaskableInterrupt)
+            switch (options.DebugStepMode)
             {
-                if (options.SkipInterruptRoutine) return false;
-            }
+                // --- In Step-Into mode we always stop when we're about to
+                // --- execute the next instruction
+                case DebugStepMode.StepInto:
+                    return executedInstructionCount > 0;
 
-            // --- In Step-Into mode we always stop when we're about to
-            // --- execute the next instruction
-            if (options.DebugStepMode == DebugStepMode.StepInto)
-            {
-                return executedInstructionCount > 0;
-            }
-
-            // --- In Stop-At-Breakpoint mode we stop only if a predefined
-            // --- breakpoint is reached
-            if (options.DebugStepMode == DebugStepMode.StopAtBreakpoint
-                && DebugInfoProvider.ShouldBreakAtAddress(Cpu.Registers.PC))
-            {
-                if (executedInstructionCount > 0
-                    || _lastBreakpoint == null
-                    || _lastBreakpoint != Cpu.Registers.PC)
-                {
+                // --- In Stop-At-Breakpoint mode we stop only if a predefined
+                // --- breakpoint is reached
+                case DebugStepMode.StopAtBreakpoint 
+                    when DebugInfoProvider.ShouldBreakAtAddress(Cpu.Registers.PC) 
+                         && (executedInstructionCount > 0
+                            || _lastBreakpoint == null
+                            || _lastBreakpoint != Cpu.Registers.PC):
                     // --- If we are paused at a breakpoint, we do not want
                     // --- to pause again and again, unless we step through
                     _lastBreakpoint = Cpu.Registers.PC;
                     return true;
-                }
-            }
 
-            // --- We're in Step-Over mode
-            if (options.DebugStepMode == DebugStepMode.StepOver)
-            {
-                if (DebugInfoProvider.ImminentBreakpoint != null)
-                {
+                // --- We're in Step-Over mode
+                case DebugStepMode.StepOver when DebugInfoProvider.ImminentBreakpoint != null:
                     // --- We also stop, if an imminent breakpoint is reached, and also remove
                     // --- this breakpoint
                     if (DebugInfoProvider.ImminentBreakpoint == Cpu.Registers.PC)
@@ -750,9 +700,9 @@ namespace DotnetSpectrumEngine.Core.Machine
                         DebugInfoProvider.ImminentBreakpoint = null;
                         return true;
                     }
-                }
-                else
-                {
+                    break;
+
+                case DebugStepMode.StepOver:
                     var imminentJustCreated = false;
 
                     // --- We check for a CALL-like instruction
@@ -771,21 +721,19 @@ namespace DotnetSpectrumEngine.Core.Machine
                     {
                         return true;
                     }
-                }
-            }
-            else if (options.DebugStepMode == DebugStepMode.StepOut)
-            {
+
+                    break;
+
                 // --- We're in Step-Out mode and want to complete the current subroutine call
-                if (Cpu.StackDebugSupport.RetExecuted
+                case DebugStepMode.StepOut when Cpu.StackDebugSupport.RetExecuted
                     && executedInstructionCount > 0
-                    && entryStepOutStackDepth == Cpu.StackDebugSupport.StepOutStackDepth + 1)
-                {
+                    && entryStepOutStackDepth == Cpu.StackDebugSupport.StepOutStackDepth + 1:
+
                     if (Cpu.Registers.PC != Cpu.StackDebugSupport.StepOutAddress)
                     {
                         Cpu.StackDebugSupport.ClearStepOutStack();
                     }
                     return true;
-                }
             }
 
             // --- In any other case, we carry on
@@ -913,9 +861,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             var flags = MemoryDevice.Read(0x5C3B);
             flags |= 0x08;
             MemoryDevice.Write(0x5C3B, flags);
-
-            // --- Allow interrupts
-            RunsInMaskableInterrupt = false;
         }
 
         #endregion
@@ -957,7 +902,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// <summary>
         /// Sets the virtual machine's state from the JSON string
         /// </summary>
-        /// <param name="json">JSON representation of the VM's state</param>
+        /// <param name="json">JSON representation of the virtual machine's state</param>
         /// <param name="modelName">Current virtual machine model name</param>
         public void SetVmState(string json, string modelName)
         {
@@ -977,7 +922,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             spState.FrameCount = state[nameof(Spectrum48DeviceState.FrameCount)].Value<int>();
             spState.FrameTacts = state[nameof(Spectrum48DeviceState.FrameTacts)].Value<int>();
             spState.Overflow = state[nameof(Spectrum48DeviceState.Overflow)].Value<int>();
-            spState.RunsInMaskableInterrupt = state[nameof(Spectrum48DeviceState.RunsInMaskableInterrupt)].Value<bool>();
             spState.Z80CpuState = GetDeviceState(state, nameof(Spectrum48DeviceState.Z80CpuState), "CPU");
             spState.RomDeviceState = GetDeviceState(state, nameof(Spectrum48DeviceState.RomDeviceState), "ROM");
             spState.MemoryDeviceState = GetDeviceState(state, nameof(Spectrum48DeviceState.MemoryDeviceState),
@@ -1034,8 +978,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             public int FrameCount { get; set; }
             public int FrameTacts { get; set; }
             public int Overflow { get; set; }
-            public bool RunsInMaskableInterrupt { get; set; }
-
             public IDeviceState Z80CpuState { get; set; }
             public string Z80CpuStateType { get; set; }
             public IDeviceState RomDeviceState { get; set; }
@@ -1077,7 +1019,6 @@ namespace DotnetSpectrumEngine.Core.Machine
                 FrameCount = spectrum.FrameCount;
                 FrameTacts = spectrum.FrameTacts;
                 Overflow = spectrum.Overflow;
-                RunsInMaskableInterrupt = spectrum.RunsInMaskableInterrupt;
 
                 Z80CpuState = spectrum.Cpu?.GetState();
                 Z80CpuStateType = Z80CpuState?.GetType().AssemblyQualifiedName;
@@ -1114,7 +1055,6 @@ namespace DotnetSpectrumEngine.Core.Machine
                 spectrum.FrameCount = FrameCount;
                 spectrum._frameTacts = FrameTacts;
                 spectrum.Overflow = Overflow;
-                spectrum.RunsInMaskableInterrupt = RunsInMaskableInterrupt;
 
                 spectrum.Cpu?.RestoreState(Z80CpuState);
                 spectrum.RomDevice?.RestoreState(RomDeviceState);

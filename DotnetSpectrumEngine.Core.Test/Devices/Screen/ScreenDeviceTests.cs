@@ -560,8 +560,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
-            // === Be aware of EmulationMode.UntilFrameEnds
-            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilFrameEnds));
+            // === Be aware of EmulationMode.UntilRenderFrameEnds
+            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
 
             // === Display some extra information about the duration of the frame execution
             var duration = (spectrum.Clock.GetCounter() - startTime)
@@ -659,7 +659,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
 
             // --- Act
             // === Be aware of EmulationMode.UntilNextFrame
-            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilFrameEnds));
+            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
 
             // === Display some extra information about the duration of the frame execution
             var duration = (spectrum.Clock.GetCounter() - startTime)
@@ -759,7 +759,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             // === Be aware of EmulationMode.UntilNextFrame
             for (var i = 0; i < 10; i++)
             {
-                spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilFrameEnds));
+                spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
             }
 
             // === Display some extra information about the duration of the frame execution
@@ -864,7 +864,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             // --- Act
             // === We wait up to two frames
             Task.WaitAll(
-                Task.Run(() => spectrum.ExecuteCycle(cancellationSource.Token, new ExecuteCycleOptions(EmulationMode.UntilFrameEnds)), 
+                Task.Run(() => spectrum.ExecuteCycle(cancellationSource.Token, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds)), 
                     cancellationSource.Token),
                 Task.Run(() =>
                 {

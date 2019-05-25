@@ -19,7 +19,6 @@ namespace DotnetSpectrumEngine.Core.Cpu
             public bool IFF1 { get; set; }
             public bool IFF2 { get; set; }
             public byte InterruptMode { get; set; }
-            public bool MaskableInterruptModeEntered { get; set; }
 
             /// <summary>
             /// Allows a deserializer to create an empty state object
@@ -42,7 +41,6 @@ namespace DotnetSpectrumEngine.Core.Cpu
                 IFF1 = cpu.IFF1;
                 IFF2 = cpu.IFF2;
                 InterruptMode = cpu.InterruptMode;
-                MaskableInterruptModeEntered = cpu.MaskableInterruptModeEntered;
 
             }
 
@@ -62,7 +60,6 @@ namespace DotnetSpectrumEngine.Core.Cpu
                 cpu.IFF1 = IFF1;
                 cpu.IFF2 = IFF2;
                 cpu._interruptMode = InterruptMode;
-                cpu.MaskableInterruptModeEntered = MaskableInterruptModeEntered;
             }
         }
     }

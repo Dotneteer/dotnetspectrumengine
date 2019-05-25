@@ -109,12 +109,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         ISpectrumDebugInfoProvider DebugInfoProvider { get; set; }
 
         /// <summary>
-        /// This property indicates if the machine currently runs the
-        /// maskable interrupt method.
-        /// </summary>
-        bool RunsInMaskableInterrupt { get; }
-
-        /// <summary>
         /// Allows to set a clock frequency multiplier value (1, 2, 4, or 8).
         /// </summary>
         int ClockMultiplier { get; }

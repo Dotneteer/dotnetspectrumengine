@@ -12,9 +12,6 @@
         /// <summary>Execution cancelled by the user.</summary>
         Cancelled,
 
-        /// <summary>Execution timed out.</summary>
-        Timeout,
-
         /// <summary>CPU reached the specified termination point.</summary>
         TerminationPointReached,
 

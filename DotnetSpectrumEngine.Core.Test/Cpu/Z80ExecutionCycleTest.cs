@@ -125,39 +125,6 @@ namespace DotnetSpectrumEngine.Core.Test.Cpu
             (z80.StateFlags & Z80StateFlags.Reset).ShouldBe(Z80StateFlags.None);
         }
 
-        [TestMethod]
-        public void MaskableInterruptModeIsReached()
-        {
-            // --- Arrange
-            var z80 = CreateZ80Cpu();
-            z80.IFF1 = z80.IFF2 = true;
-            z80.Registers.SP = 0x100;
-
-            // --- Act
-            z80.StateFlags |= Z80StateFlags.Int;
-            z80.ExecuteCpuCycle();
-
-            // --- Assert
-            z80.MaskableInterruptModeEntered.ShouldBeTrue();
-        }
-
-        [TestMethod]
-        public void MaskableInterruptModeIsLeft()
-        {
-            // --- Arrange
-            var z80 = CreateZ80Cpu();
-            z80.IFF1 = z80.IFF2 = true;
-            z80.Registers.SP = 0x100;
-            z80.StateFlags |= Z80StateFlags.Int;
-            z80.ExecuteCpuCycle();
-
-            // --- Act
-            z80.ExecuteCpuCycle();
-
-            // --- Assert
-            z80.MaskableInterruptModeEntered.ShouldBeFalse();
-        }
-
         private Z80Cpu CreateZ80Cpu()
         {
             var z80 = new Z80Cpu(new Z80TestMemoryDevice(), new Z80TestPortDevice())

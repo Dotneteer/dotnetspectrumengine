@@ -121,12 +121,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         IStackDebugSupport StackDebugSupport { get; set; }
 
         /// <summary>
-        /// This flag indicates if the CPU entered into a maskable
-        /// interrupt method as a result of an INT signal.
-        /// </summary>
-        bool MaskableInterruptModeEntered { get; }
-
-        /// <summary>
         /// This flag signs if the Z80 extended instruction set (Spectrum Next)
         /// is allowed, or NOP instructions should be executed instead of
         /// these extended operations.

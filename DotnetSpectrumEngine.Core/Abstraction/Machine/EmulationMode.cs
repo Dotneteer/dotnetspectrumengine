@@ -6,10 +6,10 @@
     /// </summary>
     public enum EmulationMode
     {
-        /// <summary>
-        /// Run the virtual machine until stopped.
-        /// </summary>
-        Continuous,
+        ///// <summary>
+        ///// Run the virtual machine until stopped.
+        ///// </summary>
+        //Continuous,
 
         /// <summary>
         /// Run the virtual machine in debugger mode.
@@ -25,7 +25,13 @@
         /// Run the CPU until the current ULA rendering frame ends.
         /// by the ULA clock
         /// </summary>
-        UntilFrameEnds,
+        UntilRenderFrameEnds,
+
+        /// <summary>
+        /// Run the CPU until the CPU frame (the first instructions over
+        /// 1024 tacts) ends
+        /// </summary>
+        UntilCpuFrameEnds,
 
         /// <summary>
         /// Run the CPU until a specified value of the PC register is reached.
