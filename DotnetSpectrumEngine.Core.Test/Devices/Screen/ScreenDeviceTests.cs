@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using DotnetSpectrumEngine.Core.Abstraction.Machine;
 using DotnetSpectrumEngine.Core.Abstraction.TestSupport;
 using DotnetSpectrumEngine.Core.Test.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+// ReSharper disable CommentTypo
 
 namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
 {
@@ -557,16 +557,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             {
                 spectrum.WriteSpectrumMemory((ushort)addr, 0x51);
             }
-            var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
             // === Be aware of EmulationMode.UntilRenderFrameEnds
-            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                /(double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
+            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions());
 
             // --- Assert
             var regs = spectrum.Cpu.Registers;
@@ -655,16 +649,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             {
                 spectrum.WriteSpectrumMemory((ushort)addr, 0x51);
             }
-            var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
             // === Be aware of EmulationMode.UntilNextFrame
-            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                / (double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
+            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions());
 
             // --- Assert
             var regs = spectrum.Cpu.Registers;
@@ -753,19 +741,13 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
             {
                 spectrum.WriteSpectrumMemory((ushort)addr, 0x51);
             }
-            var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
             // === Be aware of EmulationMode.UntilNextFrame
             for (var i = 0; i < 10; i++)
             {
-                spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds));
+                spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions());
             }
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                / (double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
 
             // --- Assert
             var regs = spectrum.Cpu.Registers;
@@ -819,67 +801,6 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Screen
                     pixels[row, column].ShouldBe((byte)0x05);
                 }
             }
-        }
-
-        [TestMethod]
-        public void ExecutionCyleWorksWithCancellation()
-        {
-            // --- Arrange
-            var pixels = new TestPixelRenderer(SpectrumModels.ZxSpectrum48Pal.Screen);
-            var spectrum = new SpectrumAdvancedTestMachine(pixels);
-
-            // === The same as RenderingScreenWithPatternWorks1 test case, but waits
-            // === while the full frame is rendered and a new frame is started.
-
-            // --- We render the screen with pixels with color index
-            // --- of 0x09 and 0x0A in a chequered pattern
-            spectrum.InitCode(new byte[]
-            {
-                0xF3,             // DI
-                0x3E, 0x05,       // LD A,$05
-                0xD3, 0xFE,       // OUT ($FE),A
-                0x01, 0x75, 0x0A, // LD BC,$0A75
-                0x0B,             // DECLB: DEC BC
-                0x78,             // LD A,B
-                0xB1,             // OR C
-                0x20, 0xFB,       // JR NZ,DECLB
-                0xFB,             // EI
-                0x76              // HALT
-            });
-
-            for (var addr = 0x4000; addr < 0x5800; addr++)
-            {
-                spectrum.WriteSpectrumMemory((ushort)addr, (byte)((addr & 0x0100) == 0 ? 0x55 : 0xAA));
-            }
-            for (var addr = 0x5800; addr < 0x5B00; addr++)
-            {
-                spectrum.WriteSpectrumMemory((ushort)addr, 0x51);
-            }
-            var counter = spectrum.Clock.GetCounter();
-            var cancellationTime = counter + spectrum.Clock.GetFrequency()/100000; // 0.01ms
-
-            var startTime = spectrum.Clock.GetCounter();
-            var cancellationSource = new CancellationTokenSource();
-
-            // --- Act
-            // === We wait up to two frames
-            Task.WaitAll(
-                Task.Run(() => spectrum.ExecuteCycle(cancellationSource.Token, new ExecuteCycleOptions(EmulationMode.UntilRenderFrameEnds)), 
-                    cancellationSource.Token),
-                Task.Run(() =>
-                {
-                    spectrum.Clock.WaitUntil(cancellationTime, cancellationSource.Token);
-                    cancellationSource.Cancel();
-                }, cancellationSource.Token));
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                / (double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
-
-            // --- Assert
-            // === Only a part of the frame's tact time is used
-            spectrum.Cpu.Tacts.ShouldBeLessThanOrEqualTo(spectrum.ScreenDevice.ScreenConfiguration.ScreenRenderingFrameTactCount + 1);
         }
     }
 }

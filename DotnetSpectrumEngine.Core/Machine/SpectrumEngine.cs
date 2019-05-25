@@ -33,6 +33,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         ISpectrumVmTestSupport,
         ISpectrumVmRunCodeSupport
     {
+        /// <summary>
+        /// The length of a CPU Frame in tacts
+        /// </summary>
+        public const int CPU_FRAME = 1024;
+
         private int _frameTacts;
         private bool _frameCompleted;
         private readonly List<ISpectrumBoundDevice> _spectrumDevices = new List<ISpectrumBoundDevice>();
@@ -54,11 +59,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// Gets the reason why the execution cycle of the SpectrumEngine completed.
         /// </summary>
         public ExecutionCompletionReason ExecutionCompletionReason { get; private set; }
-
-        /// <summary>
-        /// The length of the physical frame in clock counts
-        /// </summary>
-        public double PhysicalFrameClockCount { get; }
 
         /// <summary>
         /// Collection of RSpectrum devices
@@ -126,11 +126,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// The port device used by the virtual machine
         /// </summary>
         public IPortDevice PortDevice { get; }
-
-        /// <summary>
-        /// The clock used within the VM
-        /// </summary>
-        public IClockProvider Clock { get; }
 
         /// <summary>
         /// The configuration of the screen
@@ -285,11 +280,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             RomDevice = romInfo.Device ?? new SpectrumRomDevice();
             RomConfiguration = (IRomConfiguration)romInfo.ConfigurationData;
 
-            // --- Init the clock
-            var clockInfo = GetDeviceInfo<IClockDevice>();
-            Clock = (IClockProvider)clockInfo.Provider
-                ?? throw new InvalidOperationException("The virtual machine needs a clock provider!");
-
             // --- Init the screen device
             var screenInfo = GetDeviceInfo<IScreenDevice>();
             var pixelRenderer = (IScreenFrameProvider)screenInfo.Provider;
@@ -336,7 +326,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Carry out frame calculations
             ResetUlaTact();
             _frameTacts = ScreenConfiguration.ScreenRenderingFrameTactCount;
-            PhysicalFrameClockCount = Clock.GetFrequency() / (double)BaseClockFrequency * _frameTacts;
             FrameCount = 0;
             Overflow = 0;
             _frameCompleted = true;
@@ -344,7 +333,6 @@ namespace DotnetSpectrumEngine.Core.Machine
 
             // --- Attach providers
             AttachProvider(RomProvider);
-            AttachProvider(Clock);
             AttachProvider(pixelRenderer);
             AttachProvider(BeeperProvider);
             AttachProvider(KeyboardProvider);
@@ -519,140 +507,123 @@ namespace DotnetSpectrumEngine.Core.Machine
             LastExecutionStartTact = Cpu.Tacts;
             LastExecutionContentionValue = ContentionAccumulated;
 
-            // --- We use these variables to calculate wait time at the end of the frame
-            var cycleStartTime = Clock.GetCounter();
-            var cycleFrameCount = 0;
-
             // --- We use this variables to check whether to stop in Debug mode
             var executedInstructionCount = -1;
             var entryStepOutDepth = Cpu.StackDebugSupport.StepOutStackDepth;
 
-            // --- Loop #1: The main cycle that goes on until cancelled
-            while (!token.IsCancellationRequested)
+            // --- Check if we're just start running the next frame
+            if (_frameCompleted)
             {
-                if (_frameCompleted)
-                {
-                    // --- This counter helps us to calculate where we are in the frame after
-                    // --- each CPU operation cycle
-                    LastFrameStartCpuTick = Cpu.Tacts - Overflow;
+                // --- This counter helps us to calculate where we are in the frame after
+                // --- each CPU operation cycle
+                LastFrameStartCpuTick = Cpu.Tacts - Overflow;
 
-                    // --- Notify devices to start a new frame
-                    OnNewFrame();
-                    LastRenderedUlaTact = Overflow;
-                    _frameCompleted = false;
-                }
+                // --- Notify devices to start a new frame
+                OnNewFrame();
+                LastRenderedUlaTact = Overflow;
+                _frameCompleted = false;
+            }
 
-                // --- Loop #2: The physical frame cycle that goes on while CPU and ULA 
-                // --- processes everything within a physical frame (0.019968 second)
-                while (!_frameCompleted)
+            // --- The physical frame cycle that goes on while CPU and ULA 
+            // --- processes everything within a screen rendering frame
+            while (!_frameCompleted)
+            {
+                // --- Check debug mode and termination when a CPU instruction
+                // --- has been entirely executed
+                if (!Cpu.IsInOpExecution)
                 {
-                    // --- Check debug mode when a CPU instruction has been entirely executed
-                    if (!Cpu.IsInOpExecution)
+                    // --- The next instruction is about to be executed
+                    executedInstructionCount++;
+
+                    // --- Check for cancellation
+                    if (token.IsCancellationRequested)
                     {
-                        // --- Check for cancellation
-                        if (token.IsCancellationRequested)
-                        {
-                            ExecutionCompletionReason = ExecutionCompletionReason.Cancelled;
-                            return false;
-                        }
+                        ExecutionCompletionReason = ExecutionCompletionReason.Cancelled;
+                        return false;
+                    }
 
-                        // --- The next instruction is about to be executed
-                        executedInstructionCount++;
+                    // --- Check for several termination modes
+                    switch (options.EmulationMode)
+                    {
+                        // --- Check if a CPU frame is just completed
+                        case EmulationMode.UntilCpuFrameEnds
+                            when Cpu.Tacts > LastFrameStartCpuTick + CPU_FRAME:
 
-                        // --- Check for reaching the termination point
-                        if (options.EmulationMode == EmulationMode.UntilExecutionPoint)
-                        {
-                            if (options.TerminationPoint < 0x4000)
+                            ExecutionCompletionReason = ExecutionCompletionReason.CpuFrameCompleted;
+                            return true;
+
+                        // --- Check for reaching the termination point within the ROM
+                        case EmulationMode.UntilExecutionPoint
+                            when options.TerminationPoint < 0x4000:
+                            // --- ROM & address must match
+                            if (options.TerminationRom == MemoryDevice.GetSelectedRomIndex()
+                                && options.TerminationPoint == Cpu.Registers.PC)
                             {
-                                // --- ROM & address must match
-                                if (options.TerminationRom == MemoryDevice.GetSelectedRomIndex()
-                                    && options.TerminationPoint == Cpu.Registers.PC)
-                                {
-                                    // --- We reached the termination point within ROM
-                                    ExecutionCompletionReason = ExecutionCompletionReason.TerminationPointReached;
-                                    return true;
-                                }
-                            }
-                            else if (options.TerminationPoint == Cpu.Registers.PC)
-                            {
-                                // --- We reached the termination point within RAM
                                 ExecutionCompletionReason = ExecutionCompletionReason.TerminationPointReached;
                                 return true;
                             }
-                        }
+
+                            break;
+
+                        // --- Check if we reached the termination point within RAM
+                        case EmulationMode.UntilExecutionPoint
+                            when options.TerminationPoint == Cpu.Registers.PC:
+
+                            ExecutionCompletionReason = ExecutionCompletionReason.TerminationPointReached;
+                            return true;
 
                         // --- Check for a debugging stop point
-                        if (options.EmulationMode == EmulationMode.Debugger)
-                        {
-                            if (IsDebugStop(options, executedInstructionCount, entryStepOutDepth)
-                                && DebugConditionSatisfied())
-                            {
-                                // --- At this point, the cycle should be stopped because of debugging reasons
-                                // --- The screen should be refreshed
-                                ScreenDevice.OnFrameCompleted();
-                                ExecutionCompletionReason = ExecutionCompletionReason.BreakpointReached;
-                                return true;
-                            }
-                        }
+                        case EmulationMode.Debugger
+                            when IsDebugStop(options, executedInstructionCount, entryStepOutDepth)
+                                 && DebugConditionSatisfied():
+
+                            // --- At this point, the cycle should be stopped because of debugging reasons
+                            // --- The screen should be refreshed
+                            ExecutionCompletionReason = ExecutionCompletionReason.BreakpointReached;
+                            return true;
                     }
+                }
 
-                    // --- Check for interrupt signal generation
-                    InterruptDevice.CheckForInterrupt(CurrentFrameTact);
+                // --- Check for interrupt signal generation
+                InterruptDevice.CheckForInterrupt(CurrentFrameTact);
 
-                    // --- Run a single Z80 instruction
-                    Cpu.ExecuteCpuCycle();
-                    _lastBreakpoint = null;
+                // --- Run a single Z80 execution cycle
+                Cpu.ExecuteCpuCycle();
+                _lastBreakpoint = null;
 
-                    // --- Run a rendering cycle according to the current CPU tact count
-                    var lastTact = CurrentFrameTact;
-                    ScreenDevice.RenderScreen(LastRenderedUlaTact + 1, lastTact);
-                    LastRenderedUlaTact = lastTact;
+                // --- Run a screen rendering cycle according to the current CPU tact count
+                var lastTact = CurrentFrameTact;
+                ScreenDevice.RenderScreen(LastRenderedUlaTact + 1, lastTact);
+                LastRenderedUlaTact = lastTact;
 
-                    // --- Exit if the emulation mode specifies so
-                    if (options.EmulationMode == EmulationMode.UntilHalt
-                        && (Cpu.StateFlags & Z80StateFlags.Halted) != 0)
-                    {
-                        ExecutionCompletionReason = ExecutionCompletionReason.Halted;
-                        return true;
-                    }
-
-                    // --- Notify each CPU-bound device that the current operation has been completed
-                    foreach (var device in _cpuBoundDevices)
-                    {
-                        device.OnCpuOperationCompleted();
-                    }
-
-                    // --- Decide whether this frame has been completed
-                    _frameCompleted = !Cpu.IsInOpExecution && CurrentFrameTact >= _frameTacts;
-
-                } // -- End Loop #2
-
-                // --- A physical frame has just been completed. Take care about screen refresh
-                cycleFrameCount++;
-                FrameCount++;
-
-                // --- Notify devices that the current frame completed
-                OnFrameCompleted();
-
-                // --- Exit if the emulation mode specifies so
-                if (options.EmulationMode == EmulationMode.UntilRenderFrameEnds)
+                // --- Exit if the CPU is HALTed and the emulation mode specifies so
+                if (options.EmulationMode == EmulationMode.UntilHalt
+                    && (Cpu.StateFlags & Z80StateFlags.Halted) != 0)
                 {
-                    ExecutionCompletionReason = ExecutionCompletionReason.FrameCompleted;
+                    ExecutionCompletionReason = ExecutionCompletionReason.Halted;
                     return true;
                 }
 
-                // --- Wait while the frame time elapses
-                var nextFrameCounter = cycleStartTime + cycleFrameCount * PhysicalFrameClockCount;
-                Clock.WaitUntil((long)nextFrameCounter, token);
+                // --- Notify each CPU-bound device that the current operation has been completed
+                foreach (var device in _cpuBoundDevices)
+                {
+                    device.OnCpuOperationCompleted();
+                }
 
-                // --- Start a new frame and carry on
-                Overflow = CurrentFrameTact % _frameTacts;
+                // --- Decide whether this frame has been completed
+                _frameCompleted = !Cpu.IsInOpExecution && CurrentFrameTact >= _frameTacts;
+            }
 
-            } // --- End Loop #1
+            // --- A physical frame has just been completed. Take care about screen refresh
+            FrameCount++;
+            Overflow = CurrentFrameTact % _frameTacts;
 
-            // --- The cycle has been interrupted by cancellation
-            ExecutionCompletionReason = ExecutionCompletionReason.Cancelled;
-            return false;
+            // --- Notify devices that the current frame completed
+            OnFrameCompleted();
+
+            // --- We exit the cycle when the render frame has completed
+            ExecutionCompletionReason = ExecutionCompletionReason.RenderFrameCompleted;
+            return true;
         }
 
         /// <summary>
@@ -691,8 +662,9 @@ namespace DotnetSpectrumEngine.Core.Machine
                     _lastBreakpoint = Cpu.Registers.PC;
                     return true;
 
-                // --- We're in Step-Over mode
-                case DebugStepMode.StepOver when DebugInfoProvider.ImminentBreakpoint != null:
+                // --- We're in Step-Over mode and have an imminent breakpoint
+                case DebugStepMode.StepOver 
+                    when DebugInfoProvider.ImminentBreakpoint != null:
                     // --- We also stop, if an imminent breakpoint is reached, and also remove
                     // --- this breakpoint
                     if (DebugInfoProvider.ImminentBreakpoint == Cpu.Registers.PC)
@@ -702,6 +674,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                     }
                     break;
 
+                // --- We're in Step-Over mode but have no imminent breakpoint
                 case DebugStepMode.StepOver:
                     var imminentJustCreated = false;
 

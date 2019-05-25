@@ -6,6 +6,8 @@ using DotnetSpectrumEngine.Core.Devices.Interrupt;
 using DotnetSpectrumEngine.Core.Test.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+// ReSharper disable CommentTypo
+// ReSharper disable IdentifierTypo
 
 namespace DotnetSpectrumEngine.Core.Test.Devices.Interrupt
 {
@@ -34,15 +36,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Interrupt
                 0x20, 0xFB,       // JR NZ,DECLB
                 0x76              // HALT
             });
-            var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
             spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilHalt));
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                / (double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
 
             // --- Assert
             var regs = spectrum.Cpu.Registers;
@@ -71,15 +67,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Interrupt
                 0x20, 0xFB,       // JR NZ,DECLB
                 0x76              // HALT
             });
-            var startTime = spectrum.Clock.GetCounter();
 
             // --- Act
             spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(EmulationMode.UntilHalt));
-
-            // === Display some extra information about the duration of the frame execution
-            var duration = (spectrum.Clock.GetCounter() - startTime)
-                / (double)spectrum.Clock.GetFrequency();
-            Console.WriteLine("Frame execution time: {0} second", duration);
 
             // --- Assert
             var regs = spectrum.Cpu.Registers;

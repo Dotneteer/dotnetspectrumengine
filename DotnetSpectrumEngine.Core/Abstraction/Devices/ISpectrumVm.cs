@@ -37,11 +37,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         int CurrentFrameTact { get; }
 
         /// <summary>
-        /// The length of the physical frame in clock counts.
-        /// </summary>
-        double PhysicalFrameClockCount { get; }
-
-        /// <summary>
         /// The number of frame tact at which the interrupt signal is generated.
         /// </summary>
         int InterruptTact { get; }

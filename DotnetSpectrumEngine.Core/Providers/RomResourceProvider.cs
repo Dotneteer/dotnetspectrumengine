@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
+// ReSharper disable StringLiteralTypo
 
 namespace DotnetSpectrumEngine.Core.Providers
 {
@@ -15,6 +16,11 @@ namespace DotnetSpectrumEngine.Core.Providers
     public class ResourceRomProvider : VmComponentProviderBase, IRomProvider
     {
         /// <summary>
+        /// The folder where the ROM files are stored
+        /// </summary>
+        public const string RESOURCE_FOLDER = "Roms";
+
+        /// <summary>
         /// The assembly to check for resources
         /// </summary>
         public Assembly ResourceAssembly { get; }
@@ -25,33 +31,6 @@ namespace DotnetSpectrumEngine.Core.Providers
         public ResourceRomProvider(Assembly resourceAssembly = null)
         {
             ResourceAssembly = resourceAssembly ?? GetType().Assembly;
-        }
-
-        /// <summary>
-        /// The folder where the ROM files are stored
-        /// </summary>
-        private const string RESOURCE_FOLDER = "Roms";
-
-        /// <summary>
-        /// Gets the resource name for the specified ROM
-        /// </summary>
-        /// <param name="romName">Name of the ROM</param>
-        /// <param name="page">Page of the ROM (-1 means single ROM page)</param>
-        /// <returns>ROM resource name</returns>
-        public string GetRomResourceName(string romName, int page = -1)
-        {
-            return GetFullResourceName(ResourceAssembly, romName, ".rom", page);
-        }
-
-        /// <summary>
-        /// Gets the resource name for the specified ROM annotation
-        /// </summary>
-        /// <param name="romName">Name of the ROM</param>
-        /// <param name="page">Page of the ROM (-1 means single ROM page)</param>
-        /// <returns>ROM annotation resource name</returns>
-        public string GetAnnotationResourceName(string romName, int page = -1)
-        {
-            return GetFullResourceName(ResourceAssembly, romName, ".disann", page);
         }
 
         /// <summary>
@@ -125,5 +104,4 @@ namespace DotnetSpectrumEngine.Core.Providers
             return $"{asm.GetName().Name}.{RESOURCE_FOLDER}.{romName}.{resourceName}{extension}";
         }
     }
-
 }

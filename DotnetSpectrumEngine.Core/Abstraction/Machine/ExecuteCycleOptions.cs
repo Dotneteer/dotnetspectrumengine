@@ -39,7 +39,7 @@
         /// <param name="fastTapeMode">Fast tape mode.</param>
         /// <param name="terminationRom">ROM index of the termination point.</param>
         /// <param name="terminationPoint">Termination point to reach.</param>
-        public ExecuteCycleOptions(EmulationMode emulationMode = EmulationMode.UntilCpuFrameEnds,
+        public ExecuteCycleOptions(EmulationMode emulationMode = EmulationMode.UntilRenderFrameEnds,
             DebugStepMode debugStepMode = DebugStepMode.StopAtBreakpoint,
             bool fastTapeMode = false,
             int terminationRom = 0x0000,

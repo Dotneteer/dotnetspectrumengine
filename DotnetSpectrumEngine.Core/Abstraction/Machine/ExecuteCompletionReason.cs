@@ -21,8 +21,11 @@
         /// <summary>CPU reached a HALT instruction.</summary>
         Halted,
 
+        /// <summary>The current CPU frame has been completed.</summary>
+        CpuFrameCompleted,
+
         /// <summary>The current screen rendering frame has been completed.</summary>
-        FrameCompleted,
+        RenderFrameCompleted,
 
         /// <summary>There was an internal exception that has stopped the machine.</summary>
         Exception
