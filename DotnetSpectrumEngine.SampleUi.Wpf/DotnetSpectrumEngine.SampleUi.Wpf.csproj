@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="AppStyles.xaml" />
+    <None Remove="TzxResources\Border.tzx" />
+    <None Remove="TzxResources\Jackpot.tzx" />
+    <None Remove="TzxResources\JetSetWilly.tzx" />
+    <None Remove="TzxResources\JungleTrouble.tzx" />
+    <None Remove="TzxResources\Pac-Man.tzx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TzxResources\Border.tzx" />
+    <EmbeddedResource Include="TzxResources\Jackpot.tzx" />
+    <EmbeddedResource Include="TzxResources\JetSetWilly.tzx" />
+    <EmbeddedResource Include="TzxResources\JungleTrouble.tzx" />
+    <EmbeddedResource Include="TzxResources\Pac-Man.tzx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotnetSpectrumEngine.Core\DotnetSpectrumEngine.Core.csproj" />
+  </ItemGroup>
+
+</Project>

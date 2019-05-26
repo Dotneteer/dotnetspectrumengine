@@ -63,13 +63,12 @@ namespace DotnetSpectrumEngine.Core.Devices.Keyboard
         /// <summary>
         /// Sets the status of the specified Spectrum keyboard key.
         /// </summary>
-        /// <param name="key">Key code</param>
-        /// <param name="isDown">True, if the key is down; otherwise, false.</param>
-        public void SetStatus(SpectrumKeyCode key, bool isDown)
+        /// <param name="keyStatus">Status of the key to set</param>
+        public void SetStatus(KeyStatus keyStatus)
         {
-            var lineIndex = (byte)key / 5;
-            var lineMask = 1 << (byte)key % 5;
-            _lineStatus[lineIndex] = isDown
+            var lineIndex = (byte)keyStatus.KeyCode / 5;
+            var lineMask = 1 << (byte)keyStatus.KeyCode % 5;
+            _lineStatus[lineIndex] = keyStatus.IsDown
                 ? (byte)(_lineStatus[lineIndex] | lineMask)
                 : (byte)(_lineStatus[lineIndex] & ~lineMask);
 

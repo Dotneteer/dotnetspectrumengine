@@ -10,9 +10,8 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <summary>
         /// Sets the status of the specified Spectrum keyboard key.
         /// </summary>
-        /// <param name="key">Key code.</param>
-        /// <param name="isDown">True, if the key is down; otherwise, false.</param>
-        void SetStatus(SpectrumKeyCode key, bool isDown);
+        /// <param name="keyStatus">Status of the key to set</param>
+        void SetStatus(KeyStatus keyStatus);
 
         /// <summary>
         /// Gets the status of the specified Spectrum keyboard key.

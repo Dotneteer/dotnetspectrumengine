@@ -30,7 +30,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         private VmState _machineState;
         private readonly ISpectrumVm _spectrumVm;
         private readonly IClockProvider _clockProvider;
-        public readonly double _physicalFrameClockCount;
+        private readonly double _physicalFrameClockCount;
 
         #region Static data members and their initialization
 
@@ -458,6 +458,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         public ExecutionCompletionReason ExecutionCompletionReason { get; private set; }
 
         /// <summary>
+        /// This event is executed when it is time to scan the ZX Spectrum keyboard.
+        /// </summary>
+        public event EventHandler<KeyStatusEventArgs> KeyScanning;
+
+        /// <summary>
         /// This event is executed whenever the CPU frame has been completed.
         /// </summary>
         public event EventHandler<CancelEventArgs> CpuFrameCompleted;
@@ -497,12 +502,26 @@ namespace DotnetSpectrumEngine.Core.Machine
             ExecuteCycleOptions options)
         {
             var lastFrameStart = _clockProvider.GetCounter();
+            var frameCount = 0;
             var completed = false;
             while (!completed)
             {
                 // --- Execute a single CPU Frame
                 var cancelled = _spectrumVm.ExecuteCycle(cancellationToken, options, true);
                 if (cancelled) return ExecutionCompletionReason.Cancelled;
+
+                // --- Check for emulated keys
+                var hasEmulatedKey = _spectrumVm.KeyboardProvider?.EmulateKeyStroke();
+                if (hasEmulatedKey != true)
+                {
+                    // --- Keyboard scan
+                    var keyStatusArgs = new KeyStatusEventArgs();
+                    KeyScanning?.Invoke(this, keyStatusArgs);
+                    foreach (var keyStatus in keyStatusArgs.KeyStatusList)
+                    {
+                        _spectrumVm.KeyboardDevice.SetStatus(keyStatus);
+                    }
+                }
 
                 // --- Do additional tasks when CPU frame completed
                 var cancelArgs = new CancelEventArgs(false);
@@ -519,9 +538,23 @@ namespace DotnetSpectrumEngine.Core.Machine
                         break;
                     case ExecutionCompletionReason.RenderFrameCompleted:
                         completed = options.EmulationMode == EmulationMode.UntilRenderFrameEnds;
+                        frameCount++;
+
+                        // --- Do additional task when render frame completed
+                        cancelArgs = new CancelEventArgs(false);
+                        RenderFrameCompleted?.Invoke(this, cancelArgs);
+                        if (cancelArgs.Cancel) return ExecutionCompletionReason.Cancelled;
+
+                        // --- Wait for the next render frame, unless completed
+                        if (!completed)
+                        {
+                            var waitInTicks = lastFrameStart + frameCount * _physicalFrameClockCount 
+                                - _clockProvider.GetCounter();
+                            var waitInMs = 1000.0 * waitInTicks / _clockProvider.GetFrequency();
+                            await Task.Delay((int) waitInMs, cancellationToken);
+                        }
                         break;
                 }
-
             }
 
             // --- Done, pass back the reason of completing the run

@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.28902.138
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetSpectrumEngine.Core", "DotnetSpectrumEngine.Core\DotnetSpectrumEngine.Core.csproj", "{444CAB78-92A8-4794-94DA-47EE853C04F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotnetSpectrumEngine.Core.Test", "DotnetSpectrumEngine.Core.Test\DotnetSpectrumEngine.Core.Test.csproj", "{E030B299-D229-4153-9955-E10805540F59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetSpectrumEngine.Core.Test", "DotnetSpectrumEngine.Core.Test\DotnetSpectrumEngine.Core.Test.csproj", "{E030B299-D229-4153-9955-E10805540F59}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotnetSpectrumEngine.SampleUi.Wpf", "DotnetSpectrumEngine.SampleUi.Wpf\DotnetSpectrumEngine.SampleUi.Wpf.csproj", "{AC115C7C-205D-406B-ACF3-D45E1C88E4C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{E030B299-D229-4153-9955-E10805540F59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E030B299-D229-4153-9955-E10805540F59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E030B299-D229-4153-9955-E10805540F59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC115C7C-205D-406B-ACF3-D45E1C88E4C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC115C7C-205D-406B-ACF3-D45E1C88E4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC115C7C-205D-406B-ACF3-D45E1C88E4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC115C7C-205D-406B-ACF3-D45E1C88E4C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

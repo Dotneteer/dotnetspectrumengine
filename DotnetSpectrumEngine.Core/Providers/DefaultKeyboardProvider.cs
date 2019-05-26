@@ -13,7 +13,7 @@ namespace DotnetSpectrumEngine.Core.Providers
     {
         // --- This method calls back the IKeyboardDevice of the Spectrum VM
         // --- whenever the state of a key changes
-        private Action<SpectrumKeyCode, bool> _statusHandler;
+        private Action<KeyStatus> _statusHandler;
 
         // --- Stores the key strokes to emulate
         private readonly Queue<EmulatedKeyStroke> _emulatedKeyStrokes =
@@ -51,7 +51,7 @@ namespace DotnetSpectrumEngine.Core.Providers
         /// The first argument of the handler method is the Spectrum key code. The
         /// second argument indicates if the specified key is down (true) or up (false)
         /// </remarks>
-        public void SetKeyStatusHandler(Action<SpectrumKeyCode, bool> statusHandler)
+        public void SetKeyStatusHandler(Action<KeyStatus> statusHandler)
         {
             _statusHandler = statusHandler;
         }
@@ -89,10 +89,10 @@ namespace DotnetSpectrumEngine.Core.Providers
             if (keyStroke.EndTact < currentTact)
             {
                 // --- End emulation of this very keystroke
-                _statusHandler?.Invoke(keyStroke.PrimaryCode, false);
+                _statusHandler?.Invoke(new KeyStatus(keyStroke.PrimaryCode, false));
                 if (keyStroke.SecondaryCode.HasValue)
                 {
-                    _statusHandler?.Invoke(keyStroke.SecondaryCode.Value, false);
+                    _statusHandler?.Invoke(new KeyStatus(keyStroke.SecondaryCode.Value, false));
                 }
                 lock (_emulatedKeyStrokes)
                 {
@@ -104,10 +104,10 @@ namespace DotnetSpectrumEngine.Core.Providers
             }
 
             // --- Emulate this very keystroke, and leave it in the queue
-            _statusHandler?.Invoke(keyStroke.PrimaryCode, true);
+            _statusHandler?.Invoke(new KeyStatus(keyStroke.PrimaryCode, true));
             if (keyStroke.SecondaryCode.HasValue)
             {
-                _statusHandler?.Invoke(keyStroke.SecondaryCode.Value, true);
+                _statusHandler?.Invoke(new KeyStatus(keyStroke.SecondaryCode.Value, true));
             }
             return true;
         }
