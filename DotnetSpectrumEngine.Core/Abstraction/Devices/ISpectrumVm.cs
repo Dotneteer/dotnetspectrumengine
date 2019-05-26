@@ -9,7 +9,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
     /// <summary>
     /// This interface represents a Spectrum virtual machine
     /// </summary>
-    public interface ISpectrumVm : IFrameBoundDevice
+    public interface ISpectrumVm : IRenderFrameBoundDevice
     {
         /// <summary>
         /// The Z80 CPU of the machine.
@@ -40,11 +40,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// The number of frame tact at which the interrupt signal is generated.
         /// </summary>
         int InterruptTact { get; }
-
-        /// <summary>
-        /// The CPU tact at which the last execution cycle started.
-        /// </summary>
-        long LastExecutionStartTact { get; }
 
         /// <summary>
         /// Gets or sets the value of the contention accumulated since the start of 
@@ -144,11 +139,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         IKeyboardProvider KeyboardProvider { get; }
 
         /// <summary>
-        /// The provider that handled the beeper.
-        /// </summary>
-        IBeeperProvider BeeperProvider { get; }
-
-        /// <summary>
         /// Beeper configuration.
         /// </summary>
         IAudioConfiguration AudioConfiguration { get; }
@@ -157,11 +147,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// The sound device attached to the VM.
         /// </summary>
         ISoundDevice SoundDevice { get; }
-
-        /// <summary>
-        /// The provider that handles the sound.
-        /// </summary>
-        ISoundProvider SoundProvider { get; }
 
         /// <summary>
         /// Sound configuration.
@@ -189,12 +174,13 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         IFloppyConfiguration FloppyConfiguration { get; }
 
         /// <summary>
-        /// The main execution cycle of the Spectrum VM.
+        /// The main execution cycle of the Spectrum VM
         /// </summary>
-        /// <param name="token">Cancellation token.</param>
-        /// <param name="options">Execution options.</param>
-        /// <return>True, if the cycle completed; false, if it has been cancelled.</return>
-        bool ExecuteCycle(CancellationToken token, ExecuteCycleOptions options);
+        /// <param name="token">Cancellation token</param>
+        /// <param name="options">Execution options</param>
+        /// <param name="completeOnCpuFrame">The cycle should complete on CPU frame completion</param>
+        /// <return>True, if the cycle completed; false, if it has been cancelled</return>
+        bool ExecuteCycle(CancellationToken token, ExecuteCycleOptions options, bool completeOnCpuFrame = false);
 
         /// <summary>
         /// Gets the device with the provided type.

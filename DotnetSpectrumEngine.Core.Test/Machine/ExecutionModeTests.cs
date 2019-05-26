@@ -90,8 +90,7 @@ namespace DotnetSpectrumEngine.Core.Test.Machine
             var regs = spectrum.Cpu.Registers;
 
             // --- Act
-            spectrum.ExecuteCycle(CancellationToken.None,
-                new ExecuteCycleOptions(EmulationMode.UntilCpuFrameEnds));
+            spectrum.ExecuteCycle(CancellationToken.None, new ExecuteCycleOptions(), true);
 
             // --- Assert
             regs.A.ShouldBe((byte)0x3C);

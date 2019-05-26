@@ -25,7 +25,7 @@ namespace DotnetSpectrumEngine.Core.Test.Helpers
             base(new DeviceInfoCollection
             {
                 new CpuDeviceInfo(cpuConfig ?? SpectrumModels.ZxSpectrum128Pal.Cpu),
-                new RomDeviceInfo(new ResourceRomProvider(),
+                new RomDeviceInfo(new DefaultRomProvider(),
                     new RomConfigurationData
                     {
                         NumberOfRoms = 2,
@@ -33,7 +33,6 @@ namespace DotnetSpectrumEngine.Core.Test.Helpers
                         Spectrum48RomIndex = 1
                     },
                     new SpectrumRomDevice()),
-                new ClockDeviceInfo(new ClockProvider()),
                 new MemoryDeviceInfo(new MemoryConfigurationData
                 {
                     SupportsBanking = true,

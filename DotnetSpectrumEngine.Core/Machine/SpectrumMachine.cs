@@ -3,16 +3,21 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
 using DotnetSpectrumEngine.Core.Abstraction.Devices.Screen;
 using DotnetSpectrumEngine.Core.Abstraction.Machine;
 using DotnetSpectrumEngine.Core.Abstraction.Models;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
+using DotnetSpectrumEngine.Core.Devices.Beeper;
 using DotnetSpectrumEngine.Core.Devices.Keyboard;
 using DotnetSpectrumEngine.Core.Devices.Memory;
 using DotnetSpectrumEngine.Core.Devices.Ports;
 using DotnetSpectrumEngine.Core.Devices.Rom;
+using DotnetSpectrumEngine.Core.Devices.Sound;
 using DotnetSpectrumEngine.Core.Providers;
 
 namespace DotnetSpectrumEngine.Core.Machine
@@ -24,6 +29,8 @@ namespace DotnetSpectrumEngine.Core.Machine
     {
         private VmState _machineState;
         private readonly ISpectrumVm _spectrumVm;
+        private readonly IClockProvider _clockProvider;
+        public readonly double _physicalFrameClockCount;
 
         #region Static data members and their initialization
 
@@ -64,11 +71,10 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// </summary>
         public static void RegisterDefaultProviders()
         {
-            RegisterProvider<IRomProvider>(() => new ResourceRomProvider());
+            RegisterProvider<IClockProvider>(() => new DefaultClockProvider());
+            RegisterProvider<IRomProvider>(() => new DefaultRomProvider());
             RegisterProvider<IKeyboardProvider>(() => new DefaultKeyboardProvider());
-            RegisterProvider<IBeeperProvider>(() => new NoAudioProvider());
             RegisterProvider<ITapeProvider>(() => new DefaultTapeProvider());
-            RegisterProvider<ISoundProvider>(() => new NoAudioProvider());
         }
 
         /// <summary>
@@ -143,9 +149,12 @@ namespace DotnetSpectrumEngine.Core.Machine
             AudioSamples = new AudioSamples(_spectrumVm.SoundDevice);
             Breakpoints = new CodeBreakpoints(_spectrumVm.DebugInfoProvider);
 
+            // --- Initialize machine state
+            _clockProvider = GetProvider<IClockProvider>();
+            _physicalFrameClockCount = _clockProvider.GetFrequency() / (double) _spectrumVm.BaseClockFrequency *
+                                       ScreenConfiguration.ScreenRenderingFrameTactCount;
             MachineState = VmState.Off;
             ExecutionCompletionReason = ExecutionCompletionReason.None;
-            TimeoutTacts = 0;
         }
 
         #region Machine factory methods
@@ -261,7 +270,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new PortDeviceInfo(null, new Spectrum48PortDevice()),
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
-                new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
+                new BeeperDeviceInfo(spectrumConfig.Beeper, new BeeperDevice()),
                 new TapeDeviceInfo(GetProvider<ITapeProvider>())
             };
         }
@@ -281,9 +290,9 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new PortDeviceInfo(null, new Spectrum128PortDevice()),
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
-                new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
+                new BeeperDeviceInfo(spectrumConfig.Beeper, new BeeperDevice()),
                 new TapeDeviceInfo(GetProvider<ITapeProvider>()),
-                new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
+                new SoundDeviceInfo(spectrumConfig.Sound, new SoundDevice())
             };
         }
 
@@ -302,9 +311,9 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new PortDeviceInfo(null, new SpectrumP3PortDevice()),
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
-                new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
+                new BeeperDeviceInfo(spectrumConfig.Beeper, new BeeperDevice()),
                 new TapeDeviceInfo(GetProvider<ITapeProvider>()),
-                new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
+                new SoundDeviceInfo(spectrumConfig.Sound, new SoundDevice())
             };
         }
 
@@ -315,12 +324,12 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// <summary>
         /// The current machine's model key.
         /// </summary>
-        public string ModelKey { get; private set; }
+        public string ModelKey { get; }
 
         /// <summary>
         /// The current machine's edition key.
         /// </summary>
-        public string EditionKey { get; private set; }
+        public string EditionKey { get; }
 
         /// <summary>
         /// Gets or sets the state of the virtual machine
@@ -434,24 +443,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         public CodeBreakpoints Breakpoints { get; }
 
         /// <summary>
-        /// Runs until the timeout value specified in milliseconds
-        /// ellapses.
-        /// </summary>
-        /// <remarks>Set this value to zero to infinite timeout</remarks>
-        public long TimeoutInMs
-        {
-            get => 1000 * TimeoutTacts / _spectrumVm.BaseClockFrequency / _spectrumVm.ClockMultiplier;
-            set => TimeoutTacts = value * _spectrumVm.BaseClockFrequency * _spectrumVm.ClockMultiplier / 1000;
-        }
-
-        /// <summary>
-        /// Runs until the timeout value specified in CPU tact values
-        /// ellapses.
-        /// </summary>
-        /// <remarks>Set this value to zero to infinite timeout</remarks>
-        public long TimeoutTacts { get; set; }
-
-        /// <summary>
         /// Indicates if the machine runs in real time mode
         /// </summary>
         public bool RealTimeMode { get; set; }
@@ -466,9 +457,15 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// </summary>
         public ExecutionCompletionReason ExecutionCompletionReason { get; private set; }
 
-        #endregion
+        /// <summary>
+        /// This event is executed whenever the CPU frame has been completed.
+        /// </summary>
+        public event EventHandler<CancelEventArgs> CpuFrameCompleted;
 
-        #region Machine methods
+        /// <summary>
+        /// This event is executed whenever the render frame has been completed.
+        /// </summary>
+        public event EventHandler<CancelEventArgs> RenderFrameCompleted;
 
         #endregion
 
@@ -487,6 +484,48 @@ namespace DotnetSpectrumEngine.Core.Machine
             MachineState = VmState.TurningOn;
             //TODO: Create the machine and load its devices.
             MachineState = VmState.On;
+        }
+
+        /// <summary>
+        /// Starts the virtual machine and runs it until the execution cycle is completed for
+        /// a reason.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="options">Virtual machine execution options</param>
+        /// <returns></returns>
+        public async Task<ExecutionCompletionReason> StartAndRun(CancellationToken cancellationToken,
+            ExecuteCycleOptions options)
+        {
+            var lastFrameStart = _clockProvider.GetCounter();
+            var completed = false;
+            while (!completed)
+            {
+                // --- Execute a single CPU Frame
+                var cancelled = _spectrumVm.ExecuteCycle(cancellationToken, options, true);
+                if (cancelled) return ExecutionCompletionReason.Cancelled;
+
+                // --- Do additional tasks when CPU frame completed
+                var cancelArgs = new CancelEventArgs(false);
+                CpuFrameCompleted?.Invoke(this, cancelArgs);
+                if (cancelArgs.Cancel) return ExecutionCompletionReason.Cancelled;
+
+                switch (_spectrumVm.ExecutionCompletionReason)
+                {
+                    case ExecutionCompletionReason.TerminationPointReached:
+                    case ExecutionCompletionReason.BreakpointReached:
+                    case ExecutionCompletionReason.Halted:
+                    case ExecutionCompletionReason.Exception:
+                        completed = true;
+                        break;
+                    case ExecutionCompletionReason.RenderFrameCompleted:
+                        completed = options.EmulationMode == EmulationMode.UntilRenderFrameEnds;
+                        break;
+                }
+
+            }
+
+            // --- Done, pass back the reason of completing the run
+            return _spectrumVm.ExecutionCompletionReason;
         }
 
         #endregion

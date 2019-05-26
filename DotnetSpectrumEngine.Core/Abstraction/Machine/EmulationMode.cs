@@ -25,12 +25,6 @@
         /// <summary>
         /// Run the CPU until a specified value of the PC register is reached.
         /// </summary>
-        UntilExecutionPoint,
-
-        /// <summary>
-        /// Run the CPU until the CPU frame (the first instructions over
-        /// 1024 tacts) ends
-        /// </summary>
-        UntilCpuFrameEnds
+        UntilExecutionPoint
     }
 }

@@ -3,7 +3,7 @@
     /// <summary>
     /// This device is used to generate maskable interrupts in every frame
     /// </summary>
-    public interface IInterruptDevice: ISpectrumBoundDevice, IFrameBoundDevice
+    public interface IInterruptDevice: ISpectrumBoundDevice, IRenderFrameBoundDevice
     {
         /// <summary>
         /// The ULA tact to raise the interrupt at.

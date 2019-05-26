@@ -1021,29 +1021,6 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         }
 
         [TestMethod]
-        public void FinalizeTapeFileIsInvokedWhenLeavingSaveMode()
-        {
-            // --- Arrange
-            var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
-            td.OnAttachedToVm(vm);
-            vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
-            td.SetTapeMode();
-            var before = td.CurrentMode;
-
-            // --- Act
-            var debugCpu = vm.Cpu as IZ80CpuTestSupport;
-            debugCpu.SetTacts(2 * TapeDevice.SAVE_STOP_SILENCE);
-            td.SetTapeMode();
-
-            // --- Assert
-            before.ShouldBe(TapeOperationMode.Save);
-            td.CurrentMode.ShouldBe(TapeOperationMode.Passive);
-            saveProvider.FinalizeTapeFileInvoked.ShouldBeTrue();
-        }
-
-        [TestMethod]
         public void SaveTzxBlockIsCalledWhenCompletingDataBlock()
         {
             // --- Arrange
@@ -1201,11 +1178,6 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         private class EmptyTapeContentProvider : VmComponentProviderBase, ITapeProvider
         {
             /// <summary>
-            /// Tha tape set to load the content from
-            /// </summary>
-            public string TapeSetName { get; set; }
-
-            /// <summary>
             /// Gets a binary reader that provider TZX content
             /// </summary>
             /// <returns></returns>
@@ -1241,15 +1213,6 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             {
                 throw new System.NotImplementedException();
             }
-
-            /// <summary>
-            /// The tape provider can finalize the tape when all 
-            /// TZX blocks are written.
-            /// </summary>
-            public void FinalizeTapeFile()
-            {
-                throw new System.NotImplementedException();
-            }
         }
 
         private class FakeSaveToTapeProvider : VmComponentProviderBase, ITapeProvider
@@ -1257,17 +1220,11 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             public bool CreateTapeFileInvoked { get; private set; }
             public bool SaveTzxBlockInvoked { get; private set; }
             public string SuggestedName { get; private set; }
-            public bool FinalizeTapeFileInvoked { get; private set; }
 
             public override void Reset()
             {
                 SuggestedName = null;
             }
-
-            /// <summary>
-            /// Tha tape set to load the content from
-            /// </summary>
-            public string TapeSetName { get; set; }
 
             /// <summary>
             /// Gets a binary reader that provider TZX content
@@ -1291,11 +1248,6 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             public void SaveTapeBlock(ITapeDataSerialization block)
             {
                 SaveTzxBlockInvoked = true;
-            }
-
-            public void FinalizeTapeFile()
-            {
-                FinalizeTapeFileInvoked = true;
             }
         }
     }

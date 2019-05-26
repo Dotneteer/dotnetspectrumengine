@@ -13,7 +13,7 @@ namespace DotnetSpectrumEngine.Core.Providers
     /// <remarks>
     /// The resource should be embedded into the calling assembly.
     /// </remarks>
-    public class ResourceRomProvider : VmComponentProviderBase, IRomProvider
+    public class DefaultRomProvider : VmComponentProviderBase, IRomProvider
     {
         /// <summary>
         /// The folder where the ROM files are stored
@@ -28,7 +28,7 @@ namespace DotnetSpectrumEngine.Core.Providers
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
-        public ResourceRomProvider(Assembly resourceAssembly = null)
+        public DefaultRomProvider(Assembly resourceAssembly = null)
         {
             ResourceAssembly = resourceAssembly ?? GetType().Assembly;
         }

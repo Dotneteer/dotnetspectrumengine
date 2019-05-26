@@ -1,23 +1,27 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
+// ReSharper disable IdentifierTypo
 
 namespace DotnetSpectrumEngine.Core.Providers
 {
     /// <summary>
     /// This class implements a clock provider that allows access to the 
-    /// high resolution system clock.
+    /// high resolution system clock through the StopWatch class.
     /// </summary>
-    public class ClockProvider : VmComponentProviderBase, IClockProvider
+    public class DefaultClockProvider : VmComponentProviderBase, IClockProvider
     {
-        private readonly Stopwatch _stopwatch = new Stopwatch();
+        private long _frequency;
+        private readonly Stopwatch _watch = new Stopwatch();
+
         /// <summary>
         /// Initializes the provider
         /// </summary>
-        public ClockProvider()
+        public DefaultClockProvider()
         {
             // ReSharper disable once VirtualMemberCallInConstructor
             Reset();
+            _watch.Start();
         }
 
         /// <summary>
@@ -25,22 +29,21 @@ namespace DotnetSpectrumEngine.Core.Providers
         /// </summary>
         public override void Reset()
         {
-            _stopwatch.Reset();
-            _stopwatch.Restart();
+            _frequency = Stopwatch.Frequency;
         }
 
         /// <summary>
         /// Retrieves the frequency of the clock. This value shows new
         /// number of clock ticks per second.
         /// </summary>
-        public long GetFrequency() => Stopwatch.Frequency;
+        public long GetFrequency() => _frequency;
 
         /// <summary>
         /// Retrieves the current counter value of the clock.
         /// </summary>
         public long GetCounter()
         {
-            return _stopwatch.ElapsedTicks;
+            return _watch.ElapsedTicks;
         }
 
         /// <summary>
@@ -51,17 +54,17 @@ namespace DotnetSpectrumEngine.Core.Providers
         public void WaitUntil(long counterValue, CancellationToken token)
         {
             // --- Calculate the number of milliseconds to wait
-            var millisecond = Stopwatch.Frequency / 1000;
+            var millisec = _frequency / 1000;
 
             // --- Wait until we have up to 4 milliseconds left
             while (!token.IsCancellationRequested)
             {
-                var milliseconds = (counterValue - GetCounter()) / millisecond;
-                if (milliseconds < 0)
+                var millisecs = (counterValue - GetCounter()) / millisec;
+                if (millisecs < 0)
                 {
                     return;
                 }
-                if (milliseconds < 4) break;
+                if (millisecs < 4) break;
                 Thread.Sleep(2);
             }
 
@@ -73,5 +76,4 @@ namespace DotnetSpectrumEngine.Core.Providers
             }
         }
     }
-
 }

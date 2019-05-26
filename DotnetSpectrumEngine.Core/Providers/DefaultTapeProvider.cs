@@ -31,11 +31,6 @@ namespace DotnetSpectrumEngine.Core.Providers
         }
 
         /// <summary>
-        /// Tha tape set to load the content from
-        /// </summary>
-        public string TapeSetName { get; set; }
-
-        /// <summary>
         /// Gets a binary reader that provider TZX content
         /// </summary>
         /// <returns>BinaryReader instance to obtain the content from</returns>
@@ -68,14 +63,5 @@ namespace DotnetSpectrumEngine.Core.Providers
         public void SaveTapeBlock(ITapeDataSerialization block)
         {
         }
-
-        /// <summary>
-        /// The tape provider can finalize the tape when all 
-        /// TZX blocks are written.
-        /// </summary>
-        public void FinalizeTapeFile()
-        {
-        }
     }
-
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
-using DotnetSpectrumEngine.Core.Abstraction.Providers;
 
 #pragma warning disable 67
 
@@ -10,7 +9,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
     public class SoundDevice: ISoundDevice
     {
         private const int DC_FILTER_SIZE = 1024;
-        private ISoundProvider _soundProvider;
         private IAudioConfiguration _soundConfiguration;
         private long _frameBegins;
         private int _frameTacts;
@@ -42,7 +40,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
         {
             HostVm = hostVm;
             _soundConfiguration = hostVm.SoundConfiguration;
-            _soundProvider = hostVm.SoundProvider;
             _frameTacts = hostVm.FrameTacts;
             _tactsPerSample = _soundConfiguration.TactsPerSample;
             _lpf = new BandPassFilter(32, _soundConfiguration.AudioSampleRate, 150.0, 8000.0);
@@ -64,7 +61,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
             FrameCount = 0;
             Overflow = 0;
             SetRegisterValue(0);
-            _soundProvider?.Reset();
             InitializeSampling();
         }
 
@@ -131,7 +127,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
                 // --- Sign overflow tacts
                 Overflow = (int)(HostVm.Cpu.Tacts - _frameBegins - _frameTacts);
             }
-            _soundProvider?.AddSoundFrame(AudioSamples);
             _frameBegins += _frameTacts;
         }
 

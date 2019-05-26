@@ -5,7 +5,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
     /// <summary>
     /// This device is bound to a rendering frame of the Spectrum virtual machine.
     /// </summary>
-    public interface IFrameBoundDevice : IDevice
+    public interface IRenderFrameBoundDevice : IDevice
     {
         /// <summary>
         /// #of frames rendered.

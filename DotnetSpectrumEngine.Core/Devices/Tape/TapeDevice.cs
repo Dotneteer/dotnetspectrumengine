@@ -65,11 +65,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         public const ushort ERROR_ROM_ADDRESS = 0x0008;
 
         /// <summary>
-        /// The maximum distance between two scans of the EAR bit
-        /// </summary>
-        public const int MAX_TACT_JUMP = 10000;
-
-        /// <summary>
         /// The width tolerance of save pulses
         /// </summary>
         public const int SAVE_PULSE_TOLERANCE = 24;
@@ -80,7 +75,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         public const int MIN_PILOT_PULSE_COUNT = 3000;
 
         /// <summary>
-        /// Lenght of the data buffer to allocate for the SAVE operation
+        /// Length of the data buffer to allocate for the SAVE operation
         /// </summary>
         public const int DATA_BUFFER_LENGTH = 0x1_0000;
 
@@ -346,7 +341,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         private void LeaveSaveMode()
         {
             _currentMode = TapeOperationMode.Passive;
-            TapeProvider?.FinalizeTapeFile();
             LeftSaveMode?.Invoke(this, EventArgs.Empty);
         }
 
@@ -370,7 +364,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         }
 
         /// <summary>
-        /// Leaves the load mode. Stops the device that playes EAR pulses
+        /// Leaves the load mode. Stops the device that plays EAR pulses
         /// </summary>
         private void LeaveLoadMode()
         {
@@ -541,7 +535,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
                     }
                     else if (pulse == MicPulseType.TermSync)
                     {
-                        // --- We received the terminating pulse, the datablock has been completed
+                        // --- We received the terminating pulse, the data block has been completed
                         nextPhase = SavePhase.None;
                         _dataBlockCount++;
 

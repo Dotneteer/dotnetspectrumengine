@@ -1,7 +1,6 @@
 ﻿using System;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
-using DotnetSpectrumEngine.Core.Abstraction.Providers;
 
 namespace DotnetSpectrumEngine.Core.Devices.Beeper
 {
@@ -10,7 +9,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
     /// </summary>
     public class BeeperDevice : IBeeperDevice
     {
-        private IBeeperProvider _beeperProvider;
         private IAudioConfiguration _audioConfiguration;
         private long _frameBegins;
         private int _frameTacts;
@@ -39,7 +37,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         {
             HostVm = hostVm;
             _audioConfiguration = hostVm.AudioConfiguration;
-            _beeperProvider = hostVm.BeeperProvider;
             _frameTacts = hostVm.FrameTacts;
             _tactsPerSample = _audioConfiguration.TactsPerSample;
             Reset();
@@ -55,7 +52,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
             FrameCount = 0;
             Overflow = 0;
             _useTapeMode = false;
-            _beeperProvider?.Reset();
             InitializeSampling();
         }
 
@@ -124,7 +120,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
                 // --- Sign overflow tacts
                 Overflow = (int)(HostVm.Cpu.Tacts - _frameBegins - _frameTacts);
             }
-            _beeperProvider?.AddSoundFrame(AudioSamples);
             _frameBegins += _frameTacts;
         }
 

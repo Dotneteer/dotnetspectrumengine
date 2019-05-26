@@ -41,7 +41,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         private int _frameTacts;
         private bool _frameCompleted;
         private readonly List<ISpectrumBoundDevice> _spectrumDevices = new List<ISpectrumBoundDevice>();
-        private readonly List<IFrameBoundDevice> _frameBoundDevices;
+        private readonly List<IRenderFrameBoundDevice> _frameBoundDevices;
         private readonly List<ICpuOperationBoundDevice> _cpuBoundDevices;
         private ushort? _lastBreakpoint;
 
@@ -158,11 +158,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         public IBeeperDevice BeeperDevice { get; }
 
         /// <summary>
-        /// The provider that handles the beeper
-        /// </summary>
-        public IBeeperProvider BeeperProvider { get; }
-
-        /// <summary>
         /// Beeper configuration
         /// </summary>
         public IAudioConfiguration AudioConfiguration { get; }
@@ -171,11 +166,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// The sound device attached to the VM
         /// </summary>
         public ISoundDevice SoundDevice { get; }
-
-        /// <summary>
-        /// The provider that handles the sound
-        /// </summary>
-        public ISoundProvider SoundProvider { get; }
 
         /// <summary>
         /// Sound configuration
@@ -289,7 +279,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Init the beeper device
             var beeperInfo = GetDeviceInfo<IBeeperDevice>();
             AudioConfiguration = (IAudioConfiguration)beeperInfo?.ConfigurationData;
-            BeeperProvider = (IBeeperProvider)beeperInfo?.Provider;
             BeeperDevice = beeperInfo?.Device ?? new BeeperDevice();
 
             // --- Init the keyboard device
@@ -310,7 +299,6 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Init the sound device
             var soundInfo = GetDeviceInfo<ISoundDevice>();
             SoundConfiguration = (IAudioConfiguration)soundInfo?.ConfigurationData;
-            SoundProvider = (ISoundProvider)soundInfo?.Provider;
             SoundDevice = soundInfo == null
                 ? null
                 : soundInfo.Device ?? new SoundDevice();
@@ -334,16 +322,9 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Attach providers
             AttachProvider(RomProvider);
             AttachProvider(pixelRenderer);
-            AttachProvider(BeeperProvider);
             AttachProvider(KeyboardProvider);
             AttachProvider(TapeProvider);
             AttachProvider(DebugInfoProvider);
-
-            // --- Attach optional providers
-            if (SoundProvider != null)
-            {
-                AttachProvider(SoundProvider);
-            }
 
             // --- Collect Spectrum devices
             _spectrumDevices.Add(RomDevice);
@@ -367,7 +348,7 @@ namespace DotnetSpectrumEngine.Core.Machine
 
             // --- Prepare bound devices
             _frameBoundDevices = _spectrumDevices
-                .OfType<IFrameBoundDevice>()
+                .OfType<IRenderFrameBoundDevice>()
                 .ToList();
             _cpuBoundDevices = _spectrumDevices
                 .OfType<ICpuOperationBoundDevice>()
@@ -499,8 +480,9 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <param name="options">Execution options</param>
+        /// <param name="completeOnCpuFrame">The cycle should complete on CPU frame completion</param>
         /// <return>True, if the cycle completed; false, if it has been cancelled</return>
-        public bool ExecuteCycle(CancellationToken token, ExecuteCycleOptions options)
+        public bool ExecuteCycle(CancellationToken token, ExecuteCycleOptions options, bool completeOnCpuFrame = false)
         {
             ExecuteCycleOptions = options;
             ExecutionCompletionReason = ExecutionCompletionReason.None;
@@ -542,16 +524,16 @@ namespace DotnetSpectrumEngine.Core.Machine
                         return false;
                     }
 
+                    // --- Check for CPU frame completion
+                    if (completeOnCpuFrame && Cpu.Tacts > LastFrameStartCpuTick + CPU_FRAME)
+                    {
+                        ExecutionCompletionReason = ExecutionCompletionReason.CpuFrameCompleted;
+                        return true;
+                    }
+
                     // --- Check for several termination modes
                     switch (options.EmulationMode)
                     {
-                        // --- Check if a CPU frame is just completed
-                        case EmulationMode.UntilCpuFrameEnds
-                            when Cpu.Tacts > LastFrameStartCpuTick + CPU_FRAME:
-
-                            ExecutionCompletionReason = ExecutionCompletionReason.CpuFrameCompleted;
-                            return true;
-
                         // --- Check for reaching the termination point within the ROM
                         case EmulationMode.UntilExecutionPoint
                             when options.TerminationPoint < 0x4000:

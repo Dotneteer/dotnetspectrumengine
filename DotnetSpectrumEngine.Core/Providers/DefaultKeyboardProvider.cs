@@ -57,20 +57,6 @@ namespace DotnetSpectrumEngine.Core.Providers
         }
 
         /// <summary>
-        /// Initiate scanning the entire keyboard
-        /// </summary>
-        /// <param name="allowPhysicalKeyboard">
-        /// Indicates if scanning the physical keyboard is allowed
-        /// </param>
-        /// <remarks>
-        /// This method never scans the physical keyboard
-        /// </remarks>
-        public void Scan(bool allowPhysicalKeyboard)
-        {
-            // --- Intentionally left blank
-        }
-
-        /// <summary>
         /// Emulates queued key strokes as if those were pressed by the user
         /// </summary>
         /// <returns>
@@ -157,5 +143,4 @@ namespace DotnetSpectrumEngine.Core.Providers
             }
         }
     }
-
 }

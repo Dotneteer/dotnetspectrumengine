@@ -22,7 +22,7 @@ namespace DotnetSpectrumEngine.Core.Test.Helpers
             base(new DeviceInfoCollection
             {
                 new CpuDeviceInfo(cpuConfig ?? SpectrumModels.ZxSpectrum48Pal.Cpu),
-                new RomDeviceInfo(new ResourceRomProvider(),
+                new RomDeviceInfo(new DefaultRomProvider(),
                     new RomConfigurationData
                     {
                         NumberOfRoms = 1,
@@ -36,7 +36,6 @@ namespace DotnetSpectrumEngine.Core.Test.Helpers
                         SupportsBanking = false,
                         ContentionType = MemoryContentionType.Ula
                     }, null),
-                new ClockDeviceInfo(new ClockProvider()),
                 new BeeperDeviceInfo(new AudioConfigurationData
                 {
                     AudioSampleRate = 35000,
@@ -139,7 +138,7 @@ namespace DotnetSpectrumEngine.Core.Test.Helpers
         /// Pops a Step-Out return point address from the stack
         /// </summary>
         /// <returns>Address popped from the stack</returns>
-        /// <returns>Zeor, if the Step-Out stack is empty</returns>
+        /// <returns>Zero, if the Step-Out stack is empty</returns>
         public ushort PopStepOutAddress()
         {
             if (_stepOutStack.Count > 0)
