@@ -28,6 +28,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         private WriteableBitmap _bitmap;
         private bool _isReloaded;
         private byte[] _lastBuffer;
+        private int _cpuFrameCount;
 
         /// <summary>
         /// The ZX Spectrum virtual machine view model utilized by this user control
@@ -76,8 +77,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             }
 
             // --- Register messages this control listens to
-            // TODO:
-            //Vm.Machine.VmScreenRefreshed += VmOnVmScreenRefreshed;
+            Vm.Machine.KeyScanning += MachineOnKeyScanning;
             Vm.Machine.RenderFrameCompleted += MachineOnRenderFrameCompleted;
 
             // --- Now, the control is fully loaded and ready to work
@@ -87,6 +87,14 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             // --- Apply the current screen size
             // ReSharper disable once PossibleNullReferenceException
             OnDisplayModeChanged(this, EventArgs.Empty);
+        }
+
+        private void MachineOnKeyScanning(object sender, KeyStatusEventArgs e)
+        {
+            if (_cpuFrameCount++ % 10 == 0)
+            {
+                e.KeyStatusList.AddRange(AppViewModel.KeyboardScanner.Scan(true));
+            }
         }
 
         private void MachineOnRenderFrameCompleted(object sender, RenderFrameEventArgs e)
@@ -106,13 +114,12 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         /// </summary>
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            // --- Unregister messages this control listens to
+            // --- Un-register messages this control listens to
             if (Vm != null)
             {
                 Vm.Machine.BeeperProvider?.PauseSound();
                 Vm.Machine.VmStateChanged -= OnVmStateChanged;
-                // TODO
-                //Vm.Machine.VmScreenRefreshed -= VmOnVmScreenRefreshed;
+                Vm.Machine.RenderFrameCompleted -= MachineOnRenderFrameCompleted;
             }
 
             // --- Sign that the next time we load the control, it is a reload
@@ -144,23 +151,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
                     }
                 },
                 DispatcherPriority.Send);
-        }
-
-        /// <summary>
-        /// The new screen frame is ready, it is time to display it
-        /// </summary>
-        private void VmOnVmScreenRefreshed(object sender)
-        {
-            // --- Refresh the screen
-            Dispatcher.Invoke(() =>
-                {
-                    // TODO
-                    //_lastBuffer = args.Buffer;
-                    RefreshSpectrumScreen(_lastBuffer);
-                    //Vm.SpectrumVm.KeyboardProvider.Scan(Vm.AllowKeyboardScan);
-                },
-                DispatcherPriority.Send
-            );
         }
 
         /// <summary>
@@ -239,10 +229,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
                 }
 
                 _bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
-            }
-            catch (Exception ex)
-            {
-
             }
             finally
             {

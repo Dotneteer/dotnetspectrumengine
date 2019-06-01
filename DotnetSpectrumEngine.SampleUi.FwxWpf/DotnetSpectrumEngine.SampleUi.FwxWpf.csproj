@@ -61,7 +61,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Providers\AudioWaveProvider.cs" />
-    <Compile Include="Providers\KeyboardProvider.cs" />
+    <Compile Include="Providers\KeyboardScanner.cs" />
     <Compile Include="SpectrumControl\DisplayModeConverter.cs" />
     <Compile Include="SpectrumControl\SpectrumDisplayControl.xaml.cs">
       <DependentUpon>SpectrumDisplayControl.xaml</DependentUpon>

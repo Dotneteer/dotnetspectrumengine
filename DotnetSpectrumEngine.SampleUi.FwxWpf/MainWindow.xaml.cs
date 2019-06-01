@@ -1,4 +1,6 @@
-﻿namespace DotnetSpectrumEngine.SampleUi.FwxWpf
+﻿using System.Windows;
+
+namespace DotnetSpectrumEngine.SampleUi.FwxWpf
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -10,9 +12,9 @@
             InitializeComponent();
             DataContext = AppViewModel.Default;
 
-            // --- We need to stop playing sound whenever the app closes
-            //Application.Current.Exit += (sender, obj) =>
-            //    SpectrumControl.Vm.SpectrumVm.BeeperProvider.KillSound();
+            //---We need to stop playing sound whenever the app closes
+            Application.Current.Exit += (sender, obj) =>
+                SpectrumControl.Vm.Machine.BeeperProvider.KillSound();
         }
     }
 }

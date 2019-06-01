@@ -17,7 +17,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
     /// <summary>
     /// This renderer renders the ear bit pulses into an MME wave form
     /// </summary>
-    public class AudioWaveProvider: VmComponentProviderBase, ISampleProvider
+    public class AudioWaveProvider: VmComponentProviderBase, IBeeperProvider, ISampleProvider
     {
         /// <summary>
         /// Number of sound frames buffered

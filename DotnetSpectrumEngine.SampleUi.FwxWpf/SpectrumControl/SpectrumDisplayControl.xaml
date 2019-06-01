@@ -12,7 +12,7 @@
              Loaded="OnLoaded"
              Unloaded="OnUnloaded"
              SizeChanged="OnSizeChanged"
-             Focusable="True" d:DataContext="{d:DesignInstance {x:Type machine:MachineViewModel}, IsDesignTimeCreatable=True}">
+             Focusable="True">
     <UserControl.Resources>
         <spectrumControl:VmBorderConverter x:Key="VmBorderConverter" />
     </UserControl.Resources>

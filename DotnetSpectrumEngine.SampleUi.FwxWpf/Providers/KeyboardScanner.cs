@@ -6,7 +6,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Input;
 using DotnetSpectrumEngine.Core.Abstraction.Devices.Keyboard;
-using DotnetSpectrumEngine.Core.Providers;
+
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
 
 // ReSharper disable InconsistentNaming
 
@@ -15,7 +17,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
     /// <summary>
     /// This class is responsible for scanning the entire keyboard
     /// </summary>
-    public class KeyboardProvider: DefaultKeyboardProvider
+    public class KeyboardScanner
     {
         // --- Keyboard layout codes to define separate key mappings for each of them
         private const string ENG_US_LAYOUT = "00000409";
@@ -24,14 +26,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
 
         // --- You can create a default layout, provided you have non-implemented custom layout
         private const string DEFAULT_LAYOUT = "default";
-
-        // --- This method calls back the IKeyboardDevice of the Spectrum VM
-        // --- whenever the state of a key changes
-        private Action<KeyStatus> _statusHandler;
-
-        // --- Stores the key strokes to emulate
-        private readonly Queue<EmulatedKeyStroke> _emulatedKeyStrokes = 
-            new Queue<EmulatedKeyStroke>();
 
         /// <summary>
         /// Maps Spectrum keys to the PC keyboard keys for Hungarian 101 keyboard layout
@@ -223,11 +217,12 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
         /// If the physical keyboard is not allowed, the device can use other
         /// ways to emulate the virtual machine's keyboard
         /// </remarks>
-        public void Scan(bool allowPhysicalKeyboard)
+        public List<KeyStatus> Scan(bool allowPhysicalKeyboard)
         {
+            var result = new List<KeyStatus>();
             if (!ApplicationIsActivated() || !allowPhysicalKeyboard)
             {
-                return;
+                return result;
             }
 
             // --- Obtain the layout mappings for the current keyboard layout
@@ -241,7 +236,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
                 if (!s_LayoutMappings.TryGetValue(DEFAULT_LAYOUT, out layoutMappings))
                 {
                     // --- No default layout 
-                    return;
+                    return result;
                 }
             }
 
@@ -249,8 +244,10 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
             foreach (var keyInfo in layoutMappings)
             {
                 var keyState = keyInfo.Value.Any(Keyboard.IsKeyDown);
-                _statusHandler?.Invoke(new KeyStatus(keyInfo.Key, keyState));
+                result.Add(new KeyStatus(keyInfo.Key, keyState));
             }
+
+            return result;
         }
 
         /// <summary>

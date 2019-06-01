@@ -77,11 +77,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         public RelayCommand<string> AssignTapeSetName { get; set; }
 
         /// <summary>
-        /// Signs if keyboard scan is allowed or disabled
-        /// </summary>
-        public bool AllowKeyboardScan { get; set; }
-
-        /// <summary>
         /// Gets the flag that indicates if fast load mode is allowed
         /// </summary>
         public bool FastTapeMode { get; set; }

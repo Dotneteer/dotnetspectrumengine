@@ -103,7 +103,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Screen
             HostVm = hostVm;
             var screenInfo = hostVm.GetDeviceInfo<IScreenDevice>();
             ScreenConfiguration = hostVm.ScreenConfiguration;
-            _pixelRenderer = (IScreenFrameProvider)screenInfo.Provider ?? new NoopPixelRenderer();
+            _pixelRenderer = (IScreenFrameProvider)screenInfo.Provider;
             _memoryDevice = hostVm.MemoryDevice;
             _contentionType = hostVm.MemoryConfiguration.ContentionType;
             InitializeScreenRenderingTactTable();
@@ -562,27 +562,6 @@ namespace DotnetSpectrumEngine.Core.Devices.Screen
             for (var i = 0; i < _pixelBuffer.Length; i++)
             {
                 _pixelBuffer[i] = data;
-            }
-        }
-
-        /// <summary>
-        /// No operation pixel renderer
-        /// </summary>
-        private class NoopPixelRenderer : VmComponentProviderBase, IScreenFrameProvider
-        {
-            /// <summary>
-            /// The screen rendering engine signs that it's time to start a new frame
-            /// </summary>
-            public void StartNewFrame()
-            {
-            }
-
-            /// <summary>
-            /// Signs that the current frame is rendered and ready to be displayed
-            /// </summary>
-            /// <param name="frame">The buffer that contains the frame to display</param>
-            public void DisplayFrame(byte[] frame)
-            {
             }
         }
 
