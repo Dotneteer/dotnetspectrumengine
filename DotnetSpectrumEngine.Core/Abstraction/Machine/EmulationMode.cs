@@ -7,6 +7,11 @@
     public enum EmulationMode
     {
         /// <summary>
+        /// Runs until not cancelled or paused by the user
+        /// </summary>
+        Continuous,
+
+        /// <summary>
         /// Run the CPU until the current ULA rendering frame ends.
         /// by the ULA clock
         /// </summary>

@@ -6,13 +6,7 @@
     public enum VmState
     {
         /// <summary>The machine is turned off</summary>
-        Off,
-
-        /// <summary>The machine is being turned on</summary>
-        TurningOn,
-
-        /// <summary>The machine is turned on</summary>
-        On,
+        None,
 
         /// <summary>The machine is starting (after On, Paused, or Stopped states)</summary>
         Starting,
@@ -30,9 +24,6 @@
         Stopping,
 
         /// <summary>The machine has successfully stopped (after Stopping)</summary>
-        Stopped,
-
-        /// <summary>The machine is being turned off (from any state)</summary>
-        TurningOff
+        Stopped
     }
 }

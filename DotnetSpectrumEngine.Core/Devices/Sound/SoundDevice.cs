@@ -1,20 +1,22 @@
 ﻿using System;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
+using DotnetSpectrumEngine.Core.Abstraction.Providers;
 
 #pragma warning disable 67
 
 namespace DotnetSpectrumEngine.Core.Devices.Sound
 {
-    public class SoundDevice: ISoundDevice
+    public class SoundDevice : ISoundDevice
     {
-        private const int DC_FILTER_SIZE = 1024;
+        private const int DC_FITER_SIZE = 1024;
+        private ISoundProvider _soundProvider;
         private IAudioConfiguration _soundConfiguration;
         private long _frameBegins;
         private int _frameTacts;
         private int _tactsPerSample;
-        private float _filterSum;
-        private readonly float[] _delay = new float[DC_FILTER_SIZE];
+        private float _filtSum;
+        private readonly float[] _delay = new float[DC_FITER_SIZE];
         private int _filterIndex;
         private BandPassFilter _lpf;
 
@@ -40,6 +42,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
         {
             HostVm = hostVm;
             _soundConfiguration = hostVm.SoundConfiguration;
+            _soundProvider = hostVm.SoundProvider;
             _frameTacts = hostVm.FrameTacts;
             _tactsPerSample = _soundConfiguration.TactsPerSample;
             _lpf = new BandPassFilter(32, _soundConfiguration.AudioSampleRate, 150.0, 8000.0);
@@ -61,6 +64,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
             FrameCount = 0;
             Overflow = 0;
             SetRegisterValue(0);
+            _soundProvider?.Reset();
             InitializeSampling();
         }
 
@@ -127,6 +131,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
                 // --- Sign overflow tacts
                 Overflow = (int)(HostVm.Cpu.Tacts - _frameBegins - _frameTacts);
             }
+            _soundProvider?.AddSoundFrame(AudioSamples);
             _frameBegins += _frameTacts;
         }
 
@@ -227,16 +232,16 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
             }
 
             // --- Mix channels
-            var sample = (channelA * PsgState.GetAmplitudeA(tact) + 
-                channelB * PsgState.GetAmplitudeB(tact) + 
+            var sample = (channelA * PsgState.GetAmplitudeA(tact) +
+                channelB * PsgState.GetAmplitudeB(tact) +
                 channelC * PsgState.GetAmplitudeC(tact)) / 3;
 
             // --- Remove DC
-            _filterSum += -_delay[_filterIndex] + sample;
+            _filtSum += -_delay[_filterIndex] + sample;
             _delay[_filterIndex] = sample;
-            sample = sample - _filterSum / DC_FILTER_SIZE;
+            sample = sample - _filtSum / DC_FITER_SIZE;
             _filterIndex++;
-            if (_filterIndex >= DC_FILTER_SIZE)
+            if (_filterIndex >= DC_FITER_SIZE)
             {
                 _filterIndex = 0;
             }
@@ -259,13 +264,17 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
             public int FrameCount { get; set; }
             public int Overflow { get; set; }
 
+            public SoundDeviceState()
+            {
+            }
+
             public SoundDeviceState(SoundDevice device)
             {
                 FrameBegins = device._frameBegins;
                 FilterIndex = device._filterIndex;
                 AudioSamples = device.AudioSamples;
                 SamplesIndex = device.NextSampleIndex;
-                var (psgRegs, noiseSeed, lastNoiseIndex) = device.PsgState.GetState();
+                (var psgRegs, var noiseSeed, var lastNoiseIndex) = device.PsgState.GetState();
                 PsgRegs = psgRegs;
                 NoiseSeed = noiseSeed;
                 LastNoiseIndex = lastNoiseIndex;
@@ -275,7 +284,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Sound
             }
 
             /// <summary>
-            /// Restores the device state from this state object
+            /// Restores the dvice state from this state object
             /// </summary>
             /// <param name="device">Device instance</param>
             public void RestoreDeviceState(IDevice device)

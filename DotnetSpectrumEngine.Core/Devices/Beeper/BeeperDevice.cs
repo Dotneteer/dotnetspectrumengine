@@ -1,14 +1,15 @@
 ﻿using System;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
+using DotnetSpectrumEngine.Core.Abstraction.Providers;
+
+#pragma warning disable 67
 
 namespace DotnetSpectrumEngine.Core.Devices.Beeper
 {
-    /// <summary>
-    /// This class implements the beeper device of the virtual machine.
-    /// </summary>
     public class BeeperDevice : IBeeperDevice
     {
+        private IBeeperProvider _beeperProvider;
         private IAudioConfiguration _audioConfiguration;
         private long _frameBegins;
         private int _frameTacts;
@@ -16,34 +17,35 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         private bool _useTapeMode;
 
         /// <summary>
-        /// Audio samples to build the audio stream.
+        /// Audio samples to build the audio stream
         /// </summary>
         public float[] AudioSamples { get; private set; }
 
         /// <summary>
-        /// Index of the next audio sample.
+        /// Index of the next audio sample
         /// </summary>
         public int NextSampleIndex { get; private set; }
 
         /// <summary>
-        /// The virtual machine that hosts the device.
+        /// The virtual machine that hosts the device
         /// </summary>
         public ISpectrumVm HostVm { get; set; }
 
         /// <summary>
-        /// Signs that the device has been attached to the Spectrum virtual machine.
+        /// Signs that the device has been attached to the Spectrum virtual machine
         /// </summary>
         public void OnAttachedToVm(ISpectrumVm hostVm)
         {
             HostVm = hostVm;
             _audioConfiguration = hostVm.AudioConfiguration;
+            _beeperProvider = hostVm.BeeperProvider;
             _frameTacts = hostVm.FrameTacts;
             _tactsPerSample = _audioConfiguration.TactsPerSample;
             Reset();
         }
 
         /// <summary>
-        /// Resets this device.
+        /// Resets this device
         /// </summary>
         public void Reset()
         {
@@ -52,19 +54,20 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
             FrameCount = 0;
             Overflow = 0;
             _useTapeMode = false;
+            _beeperProvider?.Reset();
             InitializeSampling();
         }
 
         /// <summary>
-        /// Gets the state of the device so that the state can be saved.
+        /// Gets the state of the device so that the state can be saved
         /// </summary>
-        /// <returns>The object that describes the state of the device.</returns>
+        /// <returns>The object that describes the state of the device</returns>
         IDeviceState IDevice.GetState() => null;
 
         /// <summary>
-        /// Sets the state of the device from the specified object.
+        /// Sets the state of the device from the specified object
         /// </summary>
-        /// <param name="state">Device state.</param>
+        /// <param name="state">Device state</param>
         public void RestoreState(IDeviceState state)
         {
         }
@@ -75,22 +78,22 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         public bool LastEarBit { get; set; }
 
         /// <summary>
-        /// The offset of the last recorded sample.
+        /// The offset of the last recorded sample
         /// </summary>
         public long LastSampleTact { get; set; }
 
         /// <summary>
-        /// #of frames rendered.
+        /// #of frames rendered
         /// </summary>
         public int FrameCount { get; private set; }
 
         /// <summary>
-        /// Overflow from the previous frame, given in #of tacts.
+        /// Overflow from the previous frame, given in #of tacts 
         /// </summary>
         public int Overflow { get; set; }
 
         /// <summary>
-        /// Allow the device to react to the start of a new frame.
+        /// Allow the device to react to the start of a new frame
         /// </summary>
         public void OnNewFrame()
         {
@@ -106,7 +109,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         }
 
         /// <summary>
-        /// Allow the device to react to the completion of a frame.
+        /// Allow the device to react to the completion of a frame
         /// </summary>
         public void OnFrameCompleted()
         {
@@ -120,22 +123,23 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
                 // --- Sign overflow tacts
                 Overflow = (int)(HostVm.Cpu.Tacts - _frameBegins - _frameTacts);
             }
+            _beeperProvider?.AddSoundFrame(AudioSamples);
             _frameBegins += _frameTacts;
         }
 
         /// <summary>
-        /// Allow external entities respond to frame completion.
+        /// Allow external entities respond to frame completion
         /// </summary>
         public event EventHandler FrameCompleted;
 
         /// <summary>
-        /// Processes the change of the EAR bit value.
+        /// Processes the change of the EAR bit value
         /// </summary>
         /// <param name="fromTape">
         /// False: EAR bit comes from an OUT instruction, 
-        /// True: EAR bit comes from tape.
+        /// True: EAR bit comes from tape
         /// </param>
-        /// <param name="earBit">EAR bit value.</param>
+        /// <param name="earBit">EAR bit value</param>
         public void ProcessEarBitValue(bool fromTape, bool earBit)
         {
             if (!fromTape && _useTapeMode)
@@ -145,7 +149,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
             }
             if (earBit == LastEarBit)
             {
-                // --- The EAR bit has not changed
+                // --- The earbit has not changed
                 return;
             }
 
@@ -154,10 +158,10 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         }
 
         /// <summary>
-        /// This method signs that tape should override the OUT instruction's EAR bit.
+        /// This method signs that tape should override the OUT instruction's EAR bit
         /// </summary>
         /// <param name="useTape">
-        /// True: Override the OUT instruction with the tape's EAR bit value.
+        /// True: Override the OUT instruction with the tape's EAR bit value
         /// </param>
         public void SetTapeOverride(bool useTape)
         {
@@ -165,7 +169,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         }
 
         /// <summary>
-        /// Sets up sampling information for the forthcoming frame.
+        /// Sets up sampling ionformation for the forthcoming frame
         /// </summary>
         private void InitializeSampling()
         {
@@ -180,9 +184,9 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         }
 
         /// <summary>
-        /// Create samples according the specified EAR bit.
+        /// Create samples according the specified ear bit
         /// </summary>
-        /// <param name="cpuTacts">CPU tacts number of EAR bit check</param>
+        /// <param name="cpuTacts"></param>
         private void CreateSamples(long cpuTacts)
         {
             var nextSampleOffset = LastSampleTact;
@@ -199,3 +203,5 @@ namespace DotnetSpectrumEngine.Core.Devices.Beeper
         }
     }
 }
+
+#pragma warning restore

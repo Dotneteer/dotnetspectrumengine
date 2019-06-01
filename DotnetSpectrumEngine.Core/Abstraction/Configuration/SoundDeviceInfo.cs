@@ -1,20 +1,21 @@
 ﻿using DotnetSpectrumEngine.Core.Abstraction.Devices;
+using DotnetSpectrumEngine.Core.Abstraction.Providers;
 
 namespace DotnetSpectrumEngine.Core.Abstraction.Configuration
 {
     /// <summary>
-    /// This class describes configuration information for the sound device.
+    /// This class describes configuration information for the tape device.
     /// </summary>
-    public sealed class SoundDeviceInfo:
-        DeviceInfoBase<ISoundDevice, IAudioConfiguration, INoProvider>
+    public sealed class SoundDeviceInfo :
+        DeviceInfoBase<ISoundDevice, IAudioConfiguration, ISoundProvider>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
-        /// <param name="configuration">Configuration data.</param>
-        /// <param name="device">Sound device</param>
-        public SoundDeviceInfo(IAudioConfiguration configuration, ISoundDevice device) : 
-            base(null, configuration, device)
+        /// <param name="provider">Optional provider instance</param>
+        /// <param name="configuration">Configuration data</param>
+        public SoundDeviceInfo(IAudioConfiguration configuration, ISoundProvider provider) :
+            base(provider, configuration)
         {
         }
     }

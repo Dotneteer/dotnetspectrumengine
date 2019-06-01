@@ -139,6 +139,11 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         IKeyboardProvider KeyboardProvider { get; }
 
         /// <summary>
+        /// The provider that handled the beeper
+        /// </summary>
+        IBeeperProvider BeeperProvider { get; }
+
+        /// <summary>
         /// Beeper configuration.
         /// </summary>
         IAudioConfiguration AudioConfiguration { get; }
@@ -147,6 +152,11 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// The sound device attached to the VM.
         /// </summary>
         ISoundDevice SoundDevice { get; }
+
+        /// <summary>
+        /// The provider that handles the sound
+        /// </summary>
+        ISoundProvider SoundProvider { get; }
 
         /// <summary>
         /// Sound configuration.

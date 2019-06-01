@@ -158,6 +158,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         public IBeeperDevice BeeperDevice { get; }
 
         /// <summary>
+        /// The provider that handles the beeper
+        /// </summary>
+        public IBeeperProvider BeeperProvider { get; }
+
+        /// <summary>
         /// Beeper configuration
         /// </summary>
         public IAudioConfiguration AudioConfiguration { get; }
@@ -166,6 +171,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// The sound device attached to the VM
         /// </summary>
         public ISoundDevice SoundDevice { get; }
+
+        /// <summary>
+        /// The provider that handles the sound
+        /// </summary>
+        public ISoundProvider SoundProvider { get; }
 
         /// <summary>
         /// Sound configuration
@@ -279,6 +289,7 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Init the beeper device
             var beeperInfo = GetDeviceInfo<IBeeperDevice>();
             AudioConfiguration = (IAudioConfiguration)beeperInfo?.ConfigurationData;
+            BeeperProvider = (IBeeperProvider)beeperInfo?.Provider;
             BeeperDevice = beeperInfo?.Device ?? new BeeperDevice();
 
             // --- Init the keyboard device
@@ -299,6 +310,7 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Init the sound device
             var soundInfo = GetDeviceInfo<ISoundDevice>();
             SoundConfiguration = (IAudioConfiguration)soundInfo?.ConfigurationData;
+            SoundProvider = (ISoundProvider)soundInfo?.Provider;
             SoundDevice = soundInfo == null
                 ? null
                 : soundInfo.Device ?? new SoundDevice();
@@ -322,10 +334,17 @@ namespace DotnetSpectrumEngine.Core.Machine
             // --- Attach providers
             AttachProvider(RomProvider);
             AttachProvider(pixelRenderer);
+            AttachProvider(BeeperProvider);
             AttachProvider(KeyboardProvider);
             AttachProvider(TapeProvider);
             AttachProvider(DebugInfoProvider);
 
+            // --- Attach optional providers
+            if (SoundProvider != null)
+            {
+                AttachProvider(SoundProvider);
+            }
+            
             // --- Collect Spectrum devices
             _spectrumDevices.Add(RomDevice);
             _spectrumDevices.Add(MemoryDevice);
@@ -525,7 +544,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                     }
 
                     // --- Check for CPU frame completion
-                    if (completeOnCpuFrame && Cpu.Tacts > LastFrameStartCpuTick + CPU_FRAME)
+                    if (completeOnCpuFrame && Cpu.Tacts > LastExecutionStartTact + CPU_FRAME)
                     {
                         ExecutionCompletionReason = ExecutionCompletionReason.CpuFrameCompleted;
                         return true;
