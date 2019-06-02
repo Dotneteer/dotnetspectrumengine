@@ -32,6 +32,12 @@
                     <MenuItem Header="Allow Fast Load" IsCheckable="True" IsChecked="{Binding MachineViewModel.FastTapeMode, Mode=TwoWay}"/>
                 </MenuItem>
             </Menu>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Background="Silver">
+                <TextBlock Margin="0,0,8, 0">CPU Frame: </TextBlock>
+                <TextBlock Text="{Binding MachineViewModel.Machine.LastCpuFrameTicks}" Margin="0,0,8, 0"/>
+                <TextBlock Margin="0,0,8, 0">Render Frame:</TextBlock>
+                <TextBlock Text="{Binding MachineViewModel.Machine.LastRenderFrameTicks}" Margin="0,0,8, 0"/>
+            </StackPanel>
             <ScrollViewer x:Name="MainPanel" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <Border>
                     <spectrumControl:SpectrumDisplayControl 

@@ -481,6 +481,26 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// </summary>
         public ExecutionCompletionReason ExecutionCompletionReason { get; private set; }
 
+        /// <summary>
+        /// The number of CPU frame counts since the machine has started.
+        /// </summary>
+        public int CpuFrameCount { get; private set; }
+
+        /// <summary>
+        /// The number of render frame counts since the machine has started.
+        /// </summary>
+        public int RenderFrameCount { get; private set; }
+
+        /// <summary>
+        /// The length of last CPU frame in ticks
+        /// </summary>
+        public long LastCpuFrameTicks { get; private set; }
+
+        /// <summary>
+        /// The length of last render frame in ticks
+        /// </summary>
+        public long LastRenderFrameTicks { get; private set; }
+
         #endregion
 
         #region Virtual machine events
@@ -516,7 +536,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         public event EventHandler<VmExceptionArgs> ExceptionRaised;
 
         #endregion
-
+        
         #region Machine control methods
 
         /// <summary>
@@ -540,6 +560,8 @@ namespace DotnetSpectrumEngine.Core.Machine
                 _spectrumVm.Reset();
                 _spectrumVm.Cpu.StackDebugSupport.ClearStepOutStack();
                 _spectrumVm.DebugInfoProvider?.ResetHitCounts();
+                CpuFrameCount = 0;
+                RenderFrameCount = 0;
             }
 
             // --- Dispose the previous cancellation token, and create a new one
@@ -570,7 +592,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// go into Paused or Stopped state, if the execution options allow, for example, 
         /// when it runs to a predefined breakpoint.
         /// </remarks>
-        public void Start() => StartWithOptions(new ExecuteCycleOptions(fastTapeMode: FastTapeMode));
+        public void Start()
+        {
+            RunsInDebugMode = false;
+            StartWithOptions(new ExecuteCycleOptions(fastTapeMode: FastTapeMode));
+        }
 
         /// <summary>
         /// Pauses the running machine.
@@ -622,6 +648,64 @@ namespace DotnetSpectrumEngine.Core.Machine
                     }
                     break;
             }
+            RunsInDebugMode = false;
+        }
+
+        /// <summary>
+        /// Starts the Spectrum machine and runs it on a background thread unless it reaches a breakpoint.
+        /// </summary>
+        public void StartDebug()
+        {
+            RunsInDebugMode = true;
+            StartWithOptions(new ExecuteCycleOptions(EmulationMode.Debugger,
+                fastTapeMode: FastTapeMode));
+        }
+
+        /// <summary>
+        /// Executes the subsequent Z80 instruction.
+        /// </summary>
+        /// <remarks>
+        /// The task completes when the machine has completed its execution cycle.
+        /// </remarks>
+        public void StepInto()
+        {
+            if (MachineState != VmState.Paused) return;
+            RunsInDebugMode = true;
+            StartWithOptions(new ExecuteCycleOptions(EmulationMode.Debugger,
+                DebugStepMode.StepInto,
+                FastTapeMode));
+        }
+
+        /// <summary>
+        /// Executes the subsequent Z80 CALL, RST, or block instruction entirely.
+        /// </summary>
+        /// <remarks>
+        /// The task completes when the machine has completed its execution cycle.
+        /// </remarks>
+        public void StepOver()
+        {
+            if (MachineState != VmState.Paused) return;
+
+            RunsInDebugMode = true;
+            StartWithOptions(new ExecuteCycleOptions(EmulationMode.Debugger,
+                DebugStepMode.StepOver,
+                true));
+        }
+
+        /// <summary>
+        /// Executes the subsequent Z80 CALL, RST, or block instruction entirely.
+        /// </summary>
+        /// <remarks>
+        /// The task completes when the machine has completed its execution cycle.
+        /// </remarks>
+        public void StepOut()
+        {
+            if (MachineState != VmState.Paused) return;
+
+            RunsInDebugMode = true;
+            StartWithOptions(new ExecuteCycleOptions(EmulationMode.Debugger,
+                DebugStepMode.StepOut, 
+                true));
         }
 
         /// <summary>
@@ -634,16 +718,20 @@ namespace DotnetSpectrumEngine.Core.Machine
         private async Task<ExecutionCompletionReason> StartAndRun(CancellationToken cancellationToken,
             ExecuteCycleOptions options)
         {
-            var lastFrameStart = _clockProvider.GetCounter();
+            var lastRunStart = _clockProvider.GetCounter();
+            var lastRenderFrameStart = lastRunStart;
             var frameCount = 0;
             var completed = false;
             while (!completed)
             {
                 // --- Execute a single CPU Frame
+                var lastCpuFrameStart = _clockProvider.GetCounter();
                 var cycleCompleted = _spectrumVm.ExecuteCycle(cancellationToken, options, true);
+                LastCpuFrameTicks = _clockProvider.GetCounter() - lastCpuFrameStart;
                 if (!cycleCompleted) return ExecutionCompletionReason.Cancelled;
 
                 // --- Check for emulated keys
+                CpuFrameCount++;
                 var hasEmulatedKey = _spectrumVm.KeyboardProvider?.EmulateKeyStroke();
                 if (hasEmulatedKey != true)
                 {
@@ -670,8 +758,12 @@ namespace DotnetSpectrumEngine.Core.Machine
                         completed = true;
                         break;
                     case ExecutionCompletionReason.RenderFrameCompleted:
+                        var lastFrameEnd = _clockProvider.GetCounter();
+                        LastRenderFrameTicks = lastFrameEnd - lastRenderFrameStart;
+                        lastRenderFrameStart = lastFrameEnd;
                         completed = options.EmulationMode == EmulationMode.UntilRenderFrameEnds;
                         frameCount++;
+                        RenderFrameCount++;
 
                         // --- Do additional task when render frame completed
                         var renderFrameArgs = new RenderFrameEventArgs(_spectrumVm.ScreenDevice.GetPixelBuffer());
@@ -684,12 +776,12 @@ namespace DotnetSpectrumEngine.Core.Machine
                         // --- Wait for the next render frame, unless completed
                         if (!completed)
                         {
-                            var waitInTicks = lastFrameStart + frameCount * _physicalFrameClockCount 
-                                - _clockProvider.GetCounter();
+                            var waitInTicks = lastRunStart + frameCount * _physicalFrameClockCount 
+                                - _clockProvider.GetCounter() - _physicalFrameClockCount * 0.2;
                             var waitInMs = 1000.0 * waitInTicks / _clockProvider.GetFrequency();
                             if (waitInMs > 0)
                             {
-                                await Task.Delay((int)waitInMs, cancellationToken);
+                                await Task.Delay((int) waitInMs, cancellationToken);
                                 if (cancellationToken.IsCancellationRequested)
                                 {
                                     return ExecutionCompletionReason.Cancelled;

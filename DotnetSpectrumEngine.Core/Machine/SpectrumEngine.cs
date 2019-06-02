@@ -36,7 +36,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// <summary>
         /// The length of a CPU Frame in tacts
         /// </summary>
-        public const int CPU_FRAME = 1024;
+        public const int CPU_FRAME = 8192;
 
         private int _frameTacts;
         private bool _frameCompleted;

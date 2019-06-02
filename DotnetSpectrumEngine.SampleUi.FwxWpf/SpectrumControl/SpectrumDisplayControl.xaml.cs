@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -30,6 +31,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         private bool _isReloaded;
         private byte[] _lastBuffer;
         private int _cpuFrameCount;
+        private uint[] _colors;
 
         /// <summary>
         /// The ZX Spectrum virtual machine view model utilized by this user control
@@ -57,6 +59,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             Vm.Machine.VmStateChanged += OnVmStateChanged;
 
             // --- Prepare the screen
+            _colors = Spectrum48ScreenDevice.SpectrumColors.ToArray();
             _displayPars = Vm.Machine.ScreenConfiguration;
             _bitmap = new WriteableBitmap(
                 _displayPars.ScreenWidth,
@@ -78,6 +81,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
 
             // --- Register messages this control listens to
             Vm.Machine.KeyScanning += MachineOnKeyScanning;
+            Vm.Machine.CpuFrameCompleted += MachineOnCpuFrameCompleted;
             Vm.Machine.RenderFrameCompleted += MachineOnRenderFrameCompleted;
 
             // --- Now, the control is fully loaded and ready to work
@@ -86,6 +90,12 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             // --- Let's have a short delay before starting the virtual machine
             await Task.Delay(500);
             Vm.StartVmCommand.Execute(null);
+        }
+
+        private void MachineOnCpuFrameCompleted(object sender, CancelEventArgs e)
+        {
+            // ReSharper disable once ExplicitCallerInfoArgument
+            Vm.RaisePropertyChanged("Machine");
         }
 
         /// <summary>
@@ -190,7 +200,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             var width = _displayPars.ScreenWidth;
             var height = _displayPars.ScreenLines;
 
-
             _bitmap.Lock();
             try
             {
@@ -206,7 +215,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
                         {
                             var addr = pBackBuffer + y * stride + x * 4;
                             var pixelData = currentBuffer[y * width + x];
-                            *(uint*) addr = Spectrum48ScreenDevice.SpectrumColors[pixelData & 0x0F];
+                            *(uint*) addr = _colors[pixelData & 0x0F];
                         }
                     }
                 }
