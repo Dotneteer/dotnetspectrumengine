@@ -3,19 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:wpf="clr-namespace:DotnetSpectrumEngine.SampleUi.FwxWpf"
-        xmlns:spectrumControl1="clr-namespace:DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl"
+        xmlns:spectrumControl="clr-namespace:DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl"
+        xmlns:viewModels="clr-namespace:DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels"
         x:Class="DotnetSpectrumEngine.SampleUi.FwxWpf.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow" 
-        Height="350" 
-        Width="525" 
+        Height="385.107" 
+        Width="509.042" 
         WindowStartupLocation="CenterScreen" 
-        WindowState="Maximized" d:DataContext="{d:DesignInstance {x:Type wpf:DesignTimeAppViewModel}}">
-
-    <Window.Resources>
-        <spectrumControl1:DisplayModeConverter x:Key="DisplayModeConverter"/>
-    </Window.Resources>
+        WindowState="Maximized" d:DataContext="{d:DesignInstance {x:Type viewModels:DesignTimeAppViewModel}, IsDesignTimeCreatable=True}">
 
     <Grid Background="{DynamicResource BAppBackground}">
         <DockPanel>
@@ -26,26 +22,19 @@
                     <MenuItem Header="Pause" Command="{Binding MachineViewModel.PauseVmCommand}" />
                     <MenuItem Header="Reset" Command="{Binding MachineViewModel.ResetVmCommand}" />
                 </MenuItem>
-                <MenuItem Header="_View">
-                    <MenuItem Header="100%" Tag="Normal" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                    <MenuItem Header="200%" Tag="Zoom2" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                    <MenuItem Header="300%" Tag="Zoom3" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                    <MenuItem Header="400%" Tag="Zoom4" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                    <MenuItem Header="500%" Tag="Zoom5" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                    <Separator />
-                    <MenuItem Header="Auto" Tag="Fit" CommandParameter="{Binding Tag, Converter={StaticResource DisplayModeConverter}, RelativeSource={RelativeSource Self}}" Command="{Binding MachineViewModel.SetZoomCommand}" />
-                </MenuItem>
                 <MenuItem Header="Tape">
                     <MenuItem Header="Border" Tag="Border.tzx" Command="{Binding MachineViewModel.AssignTapeSetName}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" />
                     <MenuItem Header="Pac-Man" Tag="Pac-Man.tzx" Command="{Binding MachineViewModel.AssignTapeSetName}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" />
                     <MenuItem Header="Jackpot" Tag="Jackpot.tzx" Command="{Binding MachineViewModel.AssignTapeSetName}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" />
                     <MenuItem Header="Jetset Willy" Tag="JetSetWilly.tzx" Command="{Binding MachineViewModel.AssignTapeSetName}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" />
                     <MenuItem Header="Jungle Trouble" Tag="JungleTrouble.tzx" Command="{Binding MachineViewModel.AssignTapeSetName}" CommandParameter="{Binding Tag, RelativeSource={RelativeSource Self}}" />
+                    <Separator />
+                    <MenuItem Header="Allow Fast Load" IsCheckable="True" IsChecked="{Binding MachineViewModel.FastTapeMode, Mode=TwoWay}"/>
                 </MenuItem>
             </Menu>
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="MainPanel" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <Border>
-                    <spectrumControl1:SpectrumDisplayControl 
+                    <spectrumControl:SpectrumDisplayControl 
                         x:Name="SpectrumControl"
                         DataContext="{Binding MachineViewModel}"/>
                 </Border>

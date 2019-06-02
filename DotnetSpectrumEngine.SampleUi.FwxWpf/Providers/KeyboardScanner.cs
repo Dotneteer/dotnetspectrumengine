@@ -210,17 +210,14 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
         /// <summary>
         /// Initiate scanning the entire keyboard
         /// </summary>
-        /// <param name="allowPhysicalKeyboard">
-        /// Indicates if scanning the physical keyboard is allowed
-        /// </param>
         /// <remarks>
         /// If the physical keyboard is not allowed, the device can use other
         /// ways to emulate the virtual machine's keyboard
         /// </remarks>
-        public List<KeyStatus> Scan(bool allowPhysicalKeyboard)
+        public List<KeyStatus> Scan()
         {
             var result = new List<KeyStatus>();
-            if (!ApplicationIsActivated() || !allowPhysicalKeyboard)
+            if (!ApplicationIsActivated())
             {
                 return result;
             }

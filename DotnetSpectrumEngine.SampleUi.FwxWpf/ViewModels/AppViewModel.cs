@@ -3,19 +3,18 @@ using DotnetSpectrumEngine.Core;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
 using DotnetSpectrumEngine.Core.Machine;
 using DotnetSpectrumEngine.Core.Providers;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Machine;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Mvvm;
 using DotnetSpectrumEngine.SampleUi.FwxWpf.Providers;
+using GalaSoft.MvvmLight;
 
-namespace DotnetSpectrumEngine.SampleUi.FwxWpf
+namespace DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels
 {
     /// <summary>
     /// This class represents the view model of the app
     /// </summary>
-    public class AppViewModel : EnhancedViewModelBase
+    public class AppViewModel : ViewModelBase
     {
         /// <summary>
-        /// The singleton instance of the application's view model
+        /// The Singleton instance of this class
         /// </summary>
         public static AppViewModel Default { get; private set; }
 
@@ -25,12 +24,22 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
         public static KeyboardScanner KeyboardScanner { get; private set; }
 
         /// <summary>
+        /// The default beeper provider 
+        /// </summary>
+        public static AudioWaveProvider BeeperProvider { get; private set; }
+
+        /// <summary>
+        /// The default sound provider 
+        /// </summary>
+        public static AudioWaveProvider SoundProvider { get; private set; }
+
+        /// <summary>
         /// The tape load provider of the machine
         /// </summary>
         public static ResourceBasedTapeLoadProvider TapeLoadProvider { get; private set; }
 
         /// <summary>
-        /// Resets the app's singleton view model at startup time
+        /// Resets the application's singleton view model at startup time
         /// </summary>
         static AppViewModel()
         {
@@ -44,7 +53,10 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
         {
             SpectrumMachine.Reset();
             SpectrumMachine.RegisterDefaultProviders();
-            SpectrumMachine.RegisterProvider<IBeeperProvider>(() => new AudioWaveProvider());
+            BeeperProvider = new AudioWaveProvider();
+            SpectrumMachine.RegisterProvider<IBeeperProvider>(() => BeeperProvider);
+            SoundProvider = new AudioWaveProvider(AudioProviderType.Psg);
+            SpectrumMachine.RegisterProvider<ISoundProvider>(() => SoundProvider);
             TapeLoadProvider = new ResourceBasedTapeLoadProvider(Assembly.GetExecutingAssembly());
             SpectrumMachine.RegisterProvider<ITapeLoadProvider>(() => TapeLoadProvider);
             KeyboardScanner = new KeyboardScanner();
@@ -58,7 +70,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
         {
             var machine = SpectrumMachine.CreateMachine(SpectrumModels.ZX_SPECTRUM_48, SpectrumModels.PAL);
             var vm = MachineViewModel = new MachineViewModel(machine);
-            vm.DisplayMode = SpectrumDisplayMode.Fit;
             vm.AssignTapeSetName.Execute("Pac-Man.tzx");
         }
 
@@ -66,6 +77,5 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
         /// Contains the view model used by Spectrum control
         /// </summary>
         public MachineViewModel MachineViewModel { get; }
-
     }
 }

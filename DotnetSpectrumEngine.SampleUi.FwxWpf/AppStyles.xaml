@@ -41,6 +41,4 @@
     <SolidColorBrush x:Key="BDarkBlue" Color="{StaticResource CDarkBlue}"/>
 
     <spectrumControl:VmBorderConverter x:Key="VmBorderConverter"></spectrumControl:VmBorderConverter>
-    <valueConverters:BoolToVisibleConverter x:Key="BoolToVisibleConverter"/>
-    <valueConverters:BoolToCollapsedConverter x:Key="BoolToCollapsedConverter"/>
 </ResourceDictionary>

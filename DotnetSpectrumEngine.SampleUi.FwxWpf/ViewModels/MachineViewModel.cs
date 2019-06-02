@@ -1,17 +1,15 @@
 ﻿using System;
 using DotnetSpectrumEngine.Core.Machine;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Mvvm;
+using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 
-namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
+namespace DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels
 {
     /// <summary>
     /// This view model represents the view that displays a run time Spectrum virtual machine
     /// </summary>
-    public class MachineViewModel: EnhancedViewModelBase, IDisposable
+    public class MachineViewModel: ViewModelBase, IDisposable
     {
-        private SpectrumDisplayMode _displayMode;
-        private string _tapeSetName;
-
         #region ViewModel properties
 
         /// <summary>
@@ -23,15 +21,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         /// The current state of the virtual machine
         /// </summary>
         public VmState MachineState => Machine.MachineState;
-
-        /// <summary>
-        /// The current display mode of the Spectrum control
-        /// </summary>
-        public SpectrumDisplayMode DisplayMode
-        {
-            get => _displayMode;
-            set => Set(ref _displayMode, value);
-        }
 
         /// <summary>
         /// Initializes the ZX Spectrum virtual machine
@@ -54,11 +43,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         public RelayCommand ResetVmCommand { get; set; }
 
         /// <summary>
-        /// Sets the zoom according to the specified string
-        /// </summary>
-        public RelayCommand<SpectrumDisplayMode> SetZoomCommand { get; set; }
-
-        /// <summary>
         /// Assigns the tape set name to the load content provider
         /// </summary>
         public RelayCommand<string> AssignTapeSetName { get; set; }
@@ -67,11 +51,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         /// Gets the flag that indicates if fast load mode is allowed
         /// </summary>
         public bool FastTapeMode { get; set; }
-
-        /// <summary>
-        /// Signs when the display mode changes
-        /// </summary>
-        public event EventHandler DisplayModeChanged; 
 
         #endregion
 
@@ -82,7 +61,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         /// </summary>
         public MachineViewModel()
         {
-            DisplayMode = SpectrumDisplayMode.Fit;
             StartVmCommand = new RelayCommand(
                 OnStartVm, 
                 () => MachineState != VmState.Running);
@@ -95,7 +73,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
             ResetVmCommand = new RelayCommand(
                 OnResetVm, 
                 () => MachineState == VmState.Running || MachineState == VmState.Paused);
-            SetZoomCommand = new RelayCommand<SpectrumDisplayMode>(OnZoomSet);
             AssignTapeSetName = new RelayCommand<string>(OnAssignTapeSet);
             Machine = SpectrumMachine.CreateSpectrum48Pal();
         }
@@ -128,6 +105,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         /// </summary>
         protected virtual void OnStartVm()
         {
+            Machine.FastTapeMode = FastTapeMode;
             Machine.Start();
         }
 
@@ -153,17 +131,8 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         protected virtual async void OnResetVm()
         {
             await Machine.Stop();
+            Machine.FastTapeMode = FastTapeMode;
             Machine.Start();
-        }
-
-        /// <summary>
-        /// Sets the zoom mode of the virtual machine display
-        /// </summary>
-        /// <param name="zoom"></param>
-        protected virtual void OnZoomSet(SpectrumDisplayMode zoom)
-        {
-            DisplayMode = zoom;
-            DisplayModeChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>

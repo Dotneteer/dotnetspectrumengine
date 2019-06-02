@@ -1,7 +1,6 @@
-﻿using DotnetSpectrumEngine.SampleUi.FwxWpf.Machine;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Mvvm;
+﻿using GalaSoft.MvvmLight;
 
-namespace DotnetSpectrumEngine.SampleUi.FwxWpf
+namespace DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels
 {
     /// <summary>
     /// This class represents the design time version view model of the app
@@ -11,7 +10,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
     /// XAML editor to carry out data binding
     /// </remarks>
 
-    public class DesignTimeAppViewModel : EnhancedViewModelBase
+    public class DesignTimeAppViewModel : ViewModelBase
     {
         /// <summary>
         /// Hides the constructor from external actors

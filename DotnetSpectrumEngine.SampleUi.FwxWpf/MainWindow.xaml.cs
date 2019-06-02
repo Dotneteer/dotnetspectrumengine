@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels;
 
 namespace DotnetSpectrumEngine.SampleUi.FwxWpf
 {
@@ -12,9 +13,15 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
             InitializeComponent();
             DataContext = AppViewModel.Default;
 
-            //---We need to stop playing sound whenever the app closes
+            // ---We need to stop playing sound whenever the app closes
             Application.Current.Exit += (sender, obj) =>
-                SpectrumControl.Vm.Machine.BeeperProvider.KillSound();
+                AppViewModel.BeeperProvider?.KillSound();
+
+            // --- Take care of resizing the ZX Spectrum control 
+            SpectrumControl.Loaded += (sender, args) => Resize();
+            MainPanel.SizeChanged += (sender, args) => Resize();
+
+            void Resize() => SpectrumControl.ResizeFor(MainPanel.ActualWidth, MainPanel.ActualHeight);
         }
     }
 }

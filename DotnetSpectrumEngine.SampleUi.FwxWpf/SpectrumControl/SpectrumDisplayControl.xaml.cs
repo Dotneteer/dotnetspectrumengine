@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -7,8 +9,7 @@ using System.Windows.Threading;
 using DotnetSpectrumEngine.Core.Abstraction.Devices.Screen;
 using DotnetSpectrumEngine.Core.Devices.Screen;
 using DotnetSpectrumEngine.Core.Machine;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Machine;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Mvvm;
+using DotnetSpectrumEngine.SampleUi.FwxWpf.ViewModels;
 
 namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
 {
@@ -48,13 +49,12 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         /// <summary>
         /// Initialize the Spectrum virtual machine dependencies when the user control is loaded
         /// </summary>
-        private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
+        private async void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
             Vm = DataContext as MachineViewModel;
             if (Vm == null) return;
 
             Vm.Machine.VmStateChanged += OnVmStateChanged;
-            Vm.DisplayModeChanged += OnDisplayModeChanged;
 
             // --- Prepare the screen
             _displayPars = Vm.Machine.ScreenConfiguration;
@@ -73,7 +73,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             // --- When the control is reloaded, resume playing the sound
             if (_isReloaded && Vm.MachineState == VmState.Running)
             {
-                Vm.Machine.BeeperProvider?.PlaySound();
+                AppViewModel.BeeperProvider?.PlaySound();
             }
 
             // --- Register messages this control listens to
@@ -81,32 +81,11 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             Vm.Machine.RenderFrameCompleted += MachineOnRenderFrameCompleted;
 
             // --- Now, the control is fully loaded and ready to work
-            Vm.FastTapeMode = false;
+            if (DesignerProperties.GetIsInDesignMode(this)) return;
+
+            // --- Let's have a short delay before starting the virtual machine
+            await Task.Delay(500);
             Vm.StartVmCommand.Execute(null);
-
-            // --- Apply the current screen size
-            // ReSharper disable once PossibleNullReferenceException
-            OnDisplayModeChanged(this, EventArgs.Empty);
-        }
-
-        private void MachineOnKeyScanning(object sender, KeyStatusEventArgs e)
-        {
-            if (_cpuFrameCount++ % 10 == 0)
-            {
-                e.KeyStatusList.AddRange(AppViewModel.KeyboardScanner.Scan(true));
-            }
-        }
-
-        private void MachineOnRenderFrameCompleted(object sender, RenderFrameEventArgs e)
-        {
-            // --- Refresh the screen
-            Dispatcher.Invoke(() =>
-                {
-                    _lastBuffer = e.ScreenPixels;
-                    RefreshSpectrumScreen(_lastBuffer);
-                },
-                DispatcherPriority.Send
-            );
         }
 
         /// <summary>
@@ -117,7 +96,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
             // --- Un-register messages this control listens to
             if (Vm != null)
             {
-                Vm.Machine.BeeperProvider?.PauseSound();
+                AppViewModel.BeeperProvider?.PauseSound();
                 Vm.Machine.VmStateChanged -= OnVmStateChanged;
                 Vm.Machine.RenderFrameCompleted -= MachineOnRenderFrameCompleted;
             }
@@ -136,17 +115,15 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
                     switch (args.NewState)
                     {
                         case VmState.Stopped:
-                            Vm.Machine.BeeperProvider?.KillSound();
-                            // TODO
-                            //Vm.SpectrumVm.TapeDevice.LoadCompleted -= OnFastLoadCompleted;
+                            AppViewModel.BeeperProvider?.KillSound();
+                            Vm.Machine.FastLoadCompleted -= OnFastLoadCompleted;
                             break;
                         case VmState.Running:
-                            Vm.Machine.BeeperProvider?.PlaySound();
-                            // TODO
-                            //Vm.SpectrumVm.TapeDevice.LoadCompleted += OnFastLoadCompleted;
+                            AppViewModel.BeeperProvider?.PlaySound();
+                            Vm.Machine.FastLoadCompleted += OnFastLoadCompleted;
                             break;
                         case VmState.Paused:
-                            Vm.Machine.BeeperProvider?.PauseSound();
+                            AppViewModel.BeeperProvider?.PauseSound();
                             break;
                     }
                 },
@@ -154,17 +131,29 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         }
 
         /// <summary>
-        /// Manage the size change of the control
+        /// Scans the keyboard at every 25th CPU frame cycle
         /// </summary>
-        private void OnDisplayModeChanged(object sender, EventArgs eventArgs)
+        private void MachineOnKeyScanning(object sender, KeyStatusEventArgs e)
         {
-            ResizeFor(ActualWidth, ActualHeight);
+            if (_cpuFrameCount++ % 25 == 0)
+            {
+                e.KeyStatusList.AddRange(AppViewModel.KeyboardScanner.Scan());
+            }
         }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs args)
+        /// <summary>
+        /// Takes care of refreshing the screen
+        /// </summary>
+        private void MachineOnRenderFrameCompleted(object sender, RenderFrameEventArgs e)
         {
-            if (Vm == null) return;
-            ResizeFor(args.NewSize.Width, args.NewSize.Height);
+            // --- Refresh the screen
+            Dispatcher.Invoke(() =>
+                {
+                    _lastBuffer = e.ScreenPixels;
+                    RefreshSpectrumScreen(_lastBuffer);
+                },
+                DispatcherPriority.Send
+            );
         }
 
         /// <summary>
@@ -174,26 +163,20 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
         {
             Dispatcher.Invoke(() =>
             {
-                // TODO
-                //Vm.SpectrumVm.BeeperDevice.Reset();
-                //Vm.SpectrumVm.BeeperProvider.PlaySound();
+                AppViewModel.BeeperProvider.PlaySound();
             });
         }
 
         /// <summary>
         /// Resizes the Spectrum screen according to the specified parent area size
         /// </summary>
-        private void ResizeFor(double width, double height)
+        public void ResizeFor(double width, double height)
         {
-            var scale = (int)Vm.DisplayMode;
-            if (Vm.DisplayMode < SpectrumDisplayMode.Normal || Vm.DisplayMode > SpectrumDisplayMode.Zoom5)
-            {
-                var widthFactor = (int)(width / _displayPars.ScreenWidth);
-                var heightFactor = (int)height / _displayPars.ScreenLines;
-                scale = Math.Min(widthFactor, heightFactor);
-                if (scale < (int)SpectrumDisplayMode.Normal) scale = (int)SpectrumDisplayMode.Normal;
-                else if (scale > (int)SpectrumDisplayMode.Zoom5) scale = (int)SpectrumDisplayMode.Zoom5;
-            }
+            if (Vm == null) return;
+
+            var widthFactor = (int)(width / _displayPars.ScreenWidth);
+            var heightFactor = (int)height / _displayPars.ScreenLines;
+            var scale = Math.Min(widthFactor, heightFactor);
 
             Display.Width = _displayPars.ScreenWidth * scale;
             Display.Height = _displayPars.ScreenLines * scale;
@@ -221,7 +204,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.SpectrumControl
                     {
                         for (var y = 0; y < height; y++)
                         {
-                            var addr = (int)(pBackBuffer + y * stride + x * 4);
+                            var addr = pBackBuffer + y * stride + x * 4;
                             var pixelData = currentBuffer[y * width + x];
                             *(uint*) addr = Spectrum48ScreenDevice.SpectrumColors[pixelData & 0x0F];
                         }

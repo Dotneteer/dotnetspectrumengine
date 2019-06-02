@@ -37,12 +37,24 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GalaSoft.MvvmLight, Version=5.4.1.0, Culture=neutral, PublicKeyToken=0ffbc31322e9d308, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibsStd10.5.4.1.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Platform, Version=5.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibsStd10.5.4.1.1\lib\net45\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio, Version=1.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.1.9.0\lib\net35\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibsStd10.5.4.1.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -63,13 +75,10 @@
     </ApplicationDefinition>
     <Compile Include="Providers\AudioWaveProvider.cs" />
     <Compile Include="Providers\KeyboardScanner.cs" />
-    <Compile Include="SpectrumControl\DisplayModeConverter.cs" />
     <Compile Include="SpectrumControl\SpectrumDisplayControl.xaml.cs">
       <DependentUpon>SpectrumDisplayControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="SpectrumControl\VmBorderConverter.cs" />
-    <Compile Include="ValueConverters\BoolToCollapsedConverter.cs" />
-    <Compile Include="ValueConverters\BoolToVisibleConverter.cs" />
     <Page Include="AppStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -82,31 +91,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AppViewModel.cs" />
-    <Compile Include="Audio\Interop\MmException.cs" />
-    <Compile Include="Audio\Interop\MmResult.cs" />
-    <Compile Include="Audio\Interop\WaveHeader.cs" />
-    <Compile Include="Audio\Interop\WaveHeaderFlags.cs" />
-    <Compile Include="Audio\Interop\WaveInterop.cs" />
-    <Compile Include="Audio\ISampleProvider.cs" />
-    <Compile Include="Audio\IWaveBuffer.cs" />
-    <Compile Include="Audio\IWavePlayer.cs" />
-    <Compile Include="Audio\IWaveProvider.cs" />
-    <Compile Include="Audio\PlaybackState.cs" />
-    <Compile Include="Audio\SampleToWaveProvider.cs" />
-    <Compile Include="Audio\StoppedEventArgs.cs" />
-    <Compile Include="Audio\WaveBuffer.cs" />
-    <Compile Include="Audio\WaveCallbackInfo.cs" />
-    <Compile Include="Audio\WaveCallbackStrategy.cs" />
-    <Compile Include="Audio\WaveFormat.cs" />
-    <Compile Include="Audio\WaveFormatEncoding.cs" />
-    <Compile Include="Audio\WaveOut.cs" />
-    <Compile Include="Audio\WaveOutBuffer.cs" />
-    <Compile Include="Audio\WaveWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DesignTimeAppViewModel.cs" />
-    <Compile Include="Machine\MachineViewModel.cs" />
+    <Compile Include="ViewModels\AppViewModel.cs" />
+    <Compile Include="ViewModels\DesignTimeAppViewModel.cs" />
+    <Compile Include="ViewModels\MachineViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -117,23 +104,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Mvvm\DesignerLibrary.cs" />
-    <Compile Include="Mvvm\EnhancedViewModelBase.cs" />
-    <Compile Include="Mvvm\ICleanup.cs" />
-    <Compile Include="Mvvm\IExecuteWithObject.cs" />
-    <Compile Include="Mvvm\IExecuteWithObjectAndResult.cs" />
-    <Compile Include="Mvvm\IMessenger.cs" />
-    <Compile Include="Mvvm\MessageBase.cs" />
-    <Compile Include="Mvvm\Messenger.cs" />
-    <Compile Include="Mvvm\ObservableObject.cs" />
-    <Compile Include="Mvvm\PropertyChangedMessage.cs" />
-    <Compile Include="Mvvm\PropertyChangedMessageBase.cs" />
-    <Compile Include="Mvvm\RelayCommand.cs" />
-    <Compile Include="Mvvm\SpectrumDisplayMode.cs" />
-    <Compile Include="Mvvm\ViewModelBase.cs" />
-    <Compile Include="Mvvm\ViewModelBaseWithDesignTimeFix.cs" />
-    <Compile Include="Mvvm\WeakAction.cs" />
-    <Compile Include="Mvvm\WeakFunc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

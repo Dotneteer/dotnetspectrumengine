@@ -1,7 +1,7 @@
 ﻿using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
-using DotnetSpectrumEngine.SampleUi.FwxWpf.Audio;
+using NAudio.Wave;
 
 namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
 {
@@ -17,7 +17,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Providers
     /// <summary>
     /// This renderer renders the ear bit pulses into an MME wave form
     /// </summary>
-    public class AudioWaveProvider: VmComponentProviderBase, IBeeperProvider, ISampleProvider
+    public class AudioWaveProvider: VmComponentProviderBase, ISoundProvider, ISampleProvider
     {
         /// <summary>
         /// Number of sound frames buffered

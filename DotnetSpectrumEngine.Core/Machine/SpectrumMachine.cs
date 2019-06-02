@@ -17,6 +17,7 @@ using DotnetSpectrumEngine.Core.Devices.Memory;
 using DotnetSpectrumEngine.Core.Devices.Ports;
 using DotnetSpectrumEngine.Core.Devices.Rom;
 using DotnetSpectrumEngine.Core.Providers;
+// ReSharper disable UnusedMember.Global
 
 namespace DotnetSpectrumEngine.Core.Machine
 {
@@ -76,7 +77,7 @@ namespace DotnetSpectrumEngine.Core.Machine
             RegisterProvider<IRomProvider>(() => new DefaultRomProvider());
             RegisterProvider<IKeyboardProvider>(() => new DefaultKeyboardProvider());
             RegisterProvider<ITapeLoadProvider>(() => new DefaultTapeLoadProvider());
-            RegisterProvider<ITapeSaveProvider>(() => new DefaultTapeSaveProvider());
+            RegisterProvider<ITapeSaveProvider>(() => new FileBasedTapeSaveProvider());
             RegisterProvider<IBeeperProvider>(() => new NoAudioProvider());
             RegisterProvider<ISoundProvider>(() => new NoAudioProvider());
         }
@@ -115,11 +116,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// <param name="devices">Devices to create the machine</param>
         private SpectrumMachine(string modelKey, string editionKey, DeviceInfoCollection devices)
         {
+            // --- Store model information
             ModelKey = modelKey;
             EditionKey = editionKey;
-            RealTimeMode = false;
-            DisableScreenRendering = false;
 
+            // --- Create the engine and set up properties
             _spectrumVm = new SpectrumEngine(devices);
 
             Cpu = new CpuZ80(_spectrumVm.Cpu);
@@ -150,12 +151,13 @@ namespace DotnetSpectrumEngine.Core.Machine
             ScreenBitmap = new ScreenBitmap(_spectrumVm.ScreenDevice);
             ScreenRenderingStatus = new ScreenRenderingStatus(_spectrumVm);
             BeeperConfiguration = _spectrumVm.AudioConfiguration;
-            BeeperProvider = _spectrumVm.BeeperProvider;
             BeeperSamples = new AudioSamples(_spectrumVm.BeeperDevice);
             SoundConfiguration = _spectrumVm.SoundConfiguration;
-            SoundProvider = _spectrumVm.SoundProvider;
             AudioSamples = new AudioSamples(_spectrumVm.SoundDevice);
             Breakpoints = new CodeBreakpoints(_spectrumVm.DebugInfoProvider);
+
+            // --- Hook device events
+            _spectrumVm.TapeDevice.LoadCompleted += (s, e) => FastLoadCompleted?.Invoke(s, e);
 
             // --- Initialize machine state
             _clockProvider = GetProvider<IClockProvider>();
@@ -277,7 +279,8 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
-                new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>())
+                new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>()),
+                new TapeSaveDeviceInfo(GetProvider<ITapeSaveProvider>())
             };
         }
 
@@ -298,6 +301,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
                 new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>()),
+                new TapeSaveDeviceInfo(GetProvider<ITapeSaveProvider>()),
                 new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
             };
         }
@@ -319,6 +323,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
                 new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>()),
+                new TapeSaveDeviceInfo(GetProvider<ITapeSaveProvider>()),
                 new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
             };
         }
@@ -457,11 +462,6 @@ namespace DotnetSpectrumEngine.Core.Machine
         public AudioSamples BeeperSamples { get; }
 
         /// <summary>
-        /// Gets the beeper provider of the virtual machine
-        /// </summary>
-        public IBeeperProvider BeeperProvider { get; }
-
-        /// <summary>
         /// Gets the sound (PSG) configuration of the machine
         /// </summary>
         public IAudioConfiguration SoundConfiguration { get; }
@@ -472,29 +472,18 @@ namespace DotnetSpectrumEngine.Core.Machine
         public AudioSamples AudioSamples { get; }
 
         /// <summary>
-        /// Gets the sound provider of the virtual machine
-        /// </summary>
-        public ISoundProvider SoundProvider { get; }
-
-        /// <summary>
         /// The collection of breakpoints
         /// </summary>
         public CodeBreakpoints Breakpoints { get; }
 
         /// <summary>
-        /// Indicates if the machine runs in real time mode
-        /// </summary>
-        public bool RealTimeMode { get; set; }
-
-        /// <summary>
-        /// Indicates if the machine renders the screen
-        /// </summary>
-        public bool DisableScreenRendering { get; set; }
-
-        /// <summary>
         /// Gets the reason that tells why the machine has been stopped or paused
         /// </summary>
         public ExecutionCompletionReason ExecutionCompletionReason { get; private set; }
+
+        #endregion
+
+        #region Virtual machine events
 
         /// <summary>
         /// This event is raised when the state of the virtual machine has been changed.
@@ -515,6 +504,11 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// This event is executed whenever the render frame has been completed.
         /// </summary>
         public event EventHandler<RenderFrameEventArgs> RenderFrameCompleted;
+
+        /// <summary>
+        /// This event is raised when a fast load operation has been completed.
+        /// </summary>
+        public event EventHandler FastLoadCompleted;
 
         /// <summary>
         /// This event fires when the virtual machine engine raised an exception.
@@ -636,7 +630,7 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <param name="options">Virtual machine execution options</param>
-        /// <returns></returns>
+        /// <returns>The reason why the execution completed.</returns>
         private async Task<ExecutionCompletionReason> StartAndRun(CancellationToken cancellationToken,
             ExecuteCycleOptions options)
         {
