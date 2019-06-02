@@ -1,6 +1,8 @@
-﻿using DotnetSpectrumEngine.Core;
+﻿using System.Reflection;
+using DotnetSpectrumEngine.Core;
 using DotnetSpectrumEngine.Core.Abstraction.Providers;
 using DotnetSpectrumEngine.Core.Machine;
+using DotnetSpectrumEngine.Core.Providers;
 using DotnetSpectrumEngine.SampleUi.FwxWpf.Machine;
 using DotnetSpectrumEngine.SampleUi.FwxWpf.Mvvm;
 using DotnetSpectrumEngine.SampleUi.FwxWpf.Providers;
@@ -23,6 +25,11 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
         public static KeyboardScanner KeyboardScanner { get; private set; }
 
         /// <summary>
+        /// The tape load provider of the machine
+        /// </summary>
+        public static ResourceBasedTapeLoadProvider TapeLoadProvider { get; private set; }
+
+        /// <summary>
         /// Resets the app's singleton view model at startup time
         /// </summary>
         static AppViewModel()
@@ -38,6 +45,8 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
             SpectrumMachine.Reset();
             SpectrumMachine.RegisterDefaultProviders();
             SpectrumMachine.RegisterProvider<IBeeperProvider>(() => new AudioWaveProvider());
+            TapeLoadProvider = new ResourceBasedTapeLoadProvider(Assembly.GetExecutingAssembly());
+            SpectrumMachine.RegisterProvider<ITapeLoadProvider>(() => TapeLoadProvider);
             KeyboardScanner = new KeyboardScanner();
             Default = new AppViewModel();
         }
@@ -50,7 +59,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf
             var machine = SpectrumMachine.CreateMachine(SpectrumModels.ZX_SPECTRUM_48, SpectrumModels.PAL);
             var vm = MachineViewModel = new MachineViewModel(machine);
             vm.DisplayMode = SpectrumDisplayMode.Fit;
-            vm.TapeSetName = "Pac-Man.tzx";
+            vm.AssignTapeSetName.Execute("Pac-Man.tzx");
         }
 
         /// <summary>

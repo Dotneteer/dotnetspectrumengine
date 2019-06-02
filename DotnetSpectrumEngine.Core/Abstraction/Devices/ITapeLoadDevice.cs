@@ -5,13 +5,8 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
     /// <summary>
     /// This interface represents the device that manages the tape.
     /// </summary>
-    public interface ITapeDevice : ICpuOperationBoundDevice, ISpectrumBoundDevice
+    public interface ITapeLoadDevice : ICpuOperationBoundDevice, ISpectrumBoundDevice
     {
-        /// <summary>
-        /// Allow the device to react to the start of a new frame.
-        /// </summary>
-        void OnCpuOperationCompleted();
-
         /// <summary>
         /// This flag indicates if the tape is in load mode (EAR bit is set by the tape).
         /// </summary>
@@ -23,12 +18,6 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <param name="cpuTicks">CPU tacts count when the EAR bit is read.</param>
         /// <returns></returns>
         bool GetEarBit(long cpuTicks);
-
-        /// <summary>
-        /// Sets the current tape mode according to the current PC register
-        /// and the MIC bit state.
-        /// </summary>
-        void SetTapeMode();
 
         /// <summary>
         /// Processes the the change of the MIC bit.

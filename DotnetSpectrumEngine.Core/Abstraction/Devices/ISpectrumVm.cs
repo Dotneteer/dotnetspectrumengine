@@ -91,7 +91,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <summary>
         /// The tape device attached to the VM.
         /// </summary>
-        ITapeDevice TapeDevice { get; }
+        ITapeLoadDevice TapeDevice { get; }
 
         /// <summary>
         /// Debug info provider object.
@@ -166,7 +166,7 @@ namespace DotnetSpectrumEngine.Core.Abstraction.Devices
         /// <summary>
         /// The tape device attached to the VM
         /// </summary>
-        ITapeProvider TapeProvider { get; }
+        ITapeLoadProvider TapeLoadProvider { get; }
 
         /// <summary>
         /// Gets the reason why the execution cycle of the SpectrumEngine completed.

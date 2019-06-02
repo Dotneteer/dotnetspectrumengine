@@ -15,7 +15,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
     /// <summary>
     /// This class represents the cassette tape device in ZX Spectrum
     /// </summary>
-    public class TapeDevice : ITapeDevice, ITapeDeviceTestSupport
+    public class TapeDevice : ITapeLoadDevice, ITapeSaveDevice, ITapeDeviceTestSupport
     {
         private IZ80Cpu _cpu;
         private IBeeperDevice _beeperDevice;
@@ -79,10 +79,11 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         /// </summary>
         public const int DATA_BUFFER_LENGTH = 0x1_0000;
 
+        public ITapeLoadProvider TapeLoadLoadProvider { get; }
         /// <summary>
-        /// Gets the TZX tape content provider
+        /// Gets the tape save content provider
         /// </summary>
-        public ITapeProvider TapeProvider { get; }
+        public ITapeSaveProvider TapeSaveProvider { get; }
 
         /// <summary>
         /// The virtual machine that hosts the device
@@ -138,10 +139,12 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         /// <summary>
         /// Initializes the tape device for the specified host VM
         /// </summary>
-        /// <param name="tapeProvider">Tape content provider</param>
-        public TapeDevice(ITapeProvider tapeProvider)
+        /// <param name="tapeLoadLoadProvider">Tape content load provide</param>
+        /// <param name="tapeSaveProvider">Tape content save provider</param>
+        public TapeDevice(ITapeLoadProvider tapeLoadLoadProvider, ITapeSaveProvider tapeSaveProvider)
         {
-            TapeProvider = tapeProvider;
+            TapeSaveProvider = tapeSaveProvider;
+            TapeLoadLoadProvider = tapeLoadLoadProvider;
         }
 
         /// <summary>
@@ -149,7 +152,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         /// </summary>
         public void Reset()
         {
-            TapeProvider?.Reset();
+            TapeSaveProvider?.Reset();
             _tapePlayer = null;
             _currentMode = TapeOperationMode.Passive;
             _savePhase = SavePhase.None;
@@ -223,7 +226,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
                     }
                     return;
                 case TapeOperationMode.Load:
-                    if ((_tapePlayer?.Eof ?? false) || _cpu.Registers.PC == ERROR_ROM_ADDRESS) 
+                    if ((_tapePlayer?.Eof ?? true) || _cpu.Registers.PC == ERROR_ROM_ADDRESS) 
                     {
                         LeaveLoadMode();
                         LoadCompleted?.Invoke(this, EventArgs.Empty);
@@ -331,7 +334,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
             _pilotPulseCount = 0;
             _prevDataPulse = MicPulseType.None;
             _dataBlockCount = 0;
-            TapeProvider?.CreateTapeFile();
+            TapeSaveProvider?.CreateTapeFile();
             EnteredSaveMode?.Invoke(this, EventArgs.Empty);
         }
 
@@ -352,7 +355,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
             _currentMode = TapeOperationMode.Load;
             EnteredLoadMode?.Invoke(this, EventArgs.Empty);
 
-            var contentReader = TapeProvider?.GetTapeContent();
+            var contentReader = TapeLoadLoadProvider?.GetTapeContent();
             if (contentReader == null) return;
 
             // --- Play the content
@@ -370,7 +373,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
         {
             _currentMode = TapeOperationMode.Passive;
             _tapePlayer = null;
-            TapeProvider?.Reset();
+            TapeSaveProvider?.Reset();
             HostVm.BeeperDevice.SetTapeOverride(false);
             LeftLoadMode?.Invoke(this, EventArgs.Empty);
         }
@@ -556,9 +559,9 @@ namespace DotnetSpectrumEngine.Core.Devices.Tape
                                 sb.Append((char) _dataBuffer[i]);
                             }
                             var name = sb.ToString().TrimEnd();
-                            TapeProvider?.SetName(name);
+                            TapeSaveProvider?.SetName(name);
                         }
-                        TapeProvider?.SaveTapeBlock(dataBlock);
+                        TapeSaveProvider?.SaveTapeBlock(dataBlock);
                     }
                     break;
             }

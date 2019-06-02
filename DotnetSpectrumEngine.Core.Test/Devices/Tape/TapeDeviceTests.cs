@@ -20,7 +20,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
 
             // --- Assert
@@ -32,7 +32,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = 0x0038;
 
@@ -48,7 +48,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
 
@@ -64,7 +64,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             var invoked = false;
@@ -82,7 +82,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
 
@@ -98,7 +98,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             var invoked = false;
@@ -116,7 +116,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             td.SetTapeMode();
@@ -136,7 +136,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             td.SetTapeMode();
@@ -156,7 +156,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -176,7 +176,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -196,7 +196,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(new EmptyTapeContentProvider());
+            var provider = new FakeTapeProvider();
+            var td = new TapeDevice(null, provider);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             td.SetTapeMode();
@@ -215,7 +216,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -232,11 +233,11 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         }
 
         [TestMethod]
-        public void SetTapeModeInvokesLedtSaveModeEventAfterSilence()
+        public void SetTapeModeInvokesLeftSaveModeEventAfterSilence()
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -257,7 +258,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = 0x0038;
             td.SetTapeMode();
@@ -275,7 +276,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -293,7 +294,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             td.SetTapeMode();
@@ -311,7 +312,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = 0x0038;
             td.SetTapeMode();
@@ -329,7 +330,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.LoadBytesRoutineAddress;
             td.SetTapeMode();
@@ -347,7 +348,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -365,7 +366,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -386,7 +387,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -406,7 +407,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -426,7 +427,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -454,7 +455,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -484,7 +485,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -514,7 +515,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -544,7 +545,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -574,7 +575,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -609,7 +610,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -643,7 +644,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
             td.SetTapeMode();
@@ -677,9 +678,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_0_PL;
@@ -699,9 +700,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_0_PL - TapeDevice.SAVE_PULSE_TOLERANCE - 1;
@@ -718,9 +719,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_0_PL + TapeDevice.SAVE_PULSE_TOLERANCE + 1;
@@ -737,9 +738,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
             tacts += TapeDataBlockPlayer.BIT_0_PL;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -763,9 +764,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_1_PL;
@@ -785,9 +786,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_1_PL - TapeDevice.SAVE_PULSE_TOLERANCE - 1;
@@ -804,9 +805,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
 
             // --- Act
             tacts += TapeDataBlockPlayer.BIT_1_PL + TapeDevice.SAVE_PULSE_TOLERANCE + 1;
@@ -823,9 +824,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
             tacts += TapeDataBlockPlayer.BIT_1_PL;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -849,10 +850,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
 
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
             tacts += TapeDataBlockPlayer.BIT_0_PL;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -873,9 +874,9 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
             tacts += TapeDataBlockPlayer.BIT_1_PL;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -896,7 +897,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
 
@@ -918,10 +919,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
-            (var debugCpu, var tacts, var pulse) = EmitHeaderAndData(vm, td, testData);
+            var (debugCpu, tacts, pulse) = EmitHeaderAndData(vm, td, testData);
 
             // --- Act
             tacts += TapeDataBlockPlayer.TERM_SYNC;
@@ -942,10 +943,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
-            (var debugCpu, var tacts, var pulse) = EmitHeaderAndData(vm, td, testData);
+            var (debugCpu, tacts, pulse) = EmitHeaderAndData(vm, td, testData);
 
             // --- Act
             tacts += TapeDataBlockPlayer.TERM_SYNC - TapeDevice.SAVE_PULSE_TOLERANCE - 1;
@@ -962,10 +963,10 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
-            (var debugCpu, var tacts, var pulse) = EmitHeaderAndData(vm, td, testData);
+            var (debugCpu, tacts, pulse) = EmitHeaderAndData(vm, td, testData);
 
             // --- Act
             tacts += TapeDataBlockPlayer.TERM_SYNC + TapeDevice.SAVE_PULSE_TOLERANCE + 1;
@@ -982,12 +983,12 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var td = new TapeDevice(null);
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
 
             // --- Act
-            (var debugCpu, var tacts, var pulse) = EmitFullDataBlock(vm, td, testData);
+            var (debugCpu, tacts, pulse) = EmitFullDataBlock(vm, td, testData);
             tacts += TapeDataBlockPlayer.PILOT_PL * 5;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -1007,8 +1008,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
+            var provider = new FakeTapeProvider();
+            var td = new TapeDevice(provider, provider);
             td.OnAttachedToVm(vm);
             vm.Cpu.Registers.PC = td.SaveBytesRoutineAddress;
 
@@ -1017,7 +1018,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
 
             // --- Assert
             td.CurrentMode.ShouldBe(TapeOperationMode.Save);
-            saveProvider.CreateTapeFileInvoked.ShouldBeTrue();
+            provider.CreateTapeFileInvoked.ShouldBeTrue();
         }
 
         [TestMethod]
@@ -1025,8 +1026,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
+            var provider = new FakeTapeProvider();
+            var td = new TapeDevice(provider, provider);
             td.OnAttachedToVm(vm);
             var testData = new byte[] { 0x90, 0x02, 0x05, 0xAA, 0xFF, 0x63 };
 
@@ -1036,7 +1037,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             // --- Assert
             td.CurrentMode.ShouldBe(TapeOperationMode.Save);
             td.SavePhase.ShouldBe(SavePhase.None);
-            saveProvider.SaveTzxBlockInvoked.ShouldBeTrue();
+            provider.SaveTzxBlockInvoked.ShouldBeTrue();
         }
 
         [TestMethod]
@@ -1044,8 +1045,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
+            var provider = new FakeTapeProvider();
+            var td = new TapeDevice(provider, provider);
             td.OnAttachedToVm(vm);
             var testData = new byte[]
             {
@@ -1060,7 +1061,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             // --- Assert
             td.CurrentMode.ShouldBe(TapeOperationMode.Save);
             td.SavePhase.ShouldBe(SavePhase.None);
-            saveProvider.SuggestedName.ShouldBe("Border");
+            provider.SuggestedName.ShouldBe("Border");
         }
 
         [TestMethod]
@@ -1068,8 +1069,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
+            var saveProvider = new FakeTapeProvider();
+            var td = new TapeDevice(null, null);
             td.OnAttachedToVm(vm);
             var testData = new byte[]
             {
@@ -1090,8 +1091,8 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
             // --- Arrange
             var vm = new SpectrumTapeDeviceTestMachine();
-            var saveProvider = new FakeSaveToTapeProvider();
-            var td = new TapeDevice(saveProvider);
+            var provider = new FakeTapeProvider();
+            var td = new TapeDevice(provider, provider);
             td.OnAttachedToVm(vm);
             var testData = new byte[]
             {
@@ -1100,15 +1101,15 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
                 0x4F, 0x00, 0x6F, 0x80, 0x4F, 0x00, 0xC3
             };
             EmitFullDataBlock(vm, td, testData);
-            var before = saveProvider.SuggestedName;
-            saveProvider.Reset();
+            var before = provider.SuggestedName;
+            provider.Reset();
 
             // --- Act
             EmitFullDataBlock(vm, td, testData);
 
             // --- Assert
             before.ShouldBe("Border");
-            saveProvider.SuggestedName.ShouldBeNull();
+            provider.SuggestedName.ShouldBeNull();
         }
 
         private (IZ80CpuTestSupport, int, bool) EmitHeaderWithSync(ISpectrumVm vm, TapeDevice td)
@@ -1138,7 +1139,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
 
         private (IZ80CpuTestSupport, int, bool) EmitHeaderAndData(ISpectrumVm vm, TapeDevice td, byte[] data)
         {
-            (var debugCpu, var tacts, var pulse) = EmitHeaderWithSync(vm, td);
+            var (debugCpu, tacts, pulse) = EmitHeaderWithSync(vm, td);
             foreach (var byteValue in data)
             {
                 var dataByte = byteValue;
@@ -1164,7 +1165,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
 
         private (IZ80CpuTestSupport, int, bool) EmitFullDataBlock(ISpectrumVm vm, TapeDevice td, byte[] data)
         {
-            (var debugCpu, var tacts, var pulse) = EmitHeaderAndData(vm, td, data);
+            var (debugCpu, tacts, pulse) = EmitHeaderAndData(vm, td, data);
             tacts += TapeDataBlockPlayer.TERM_SYNC;
             debugCpu.SetTacts(tacts);
             td.ProcessMicBit(pulse);
@@ -1175,7 +1176,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
         {
         }
 
-        private class EmptyTapeContentProvider : VmComponentProviderBase, ITapeProvider
+        private class EmptyTapeLoadContentProvider : VmComponentProviderBase, ITapeLoadProvider, ITapeSaveProvider
         {
             /// <summary>
             /// Gets a binary reader that provider TZX content
@@ -1215,7 +1216,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             }
         }
 
-        private class FakeSaveToTapeProvider : VmComponentProviderBase, ITapeProvider
+        private class FakeTapeProvider : VmComponentProviderBase, ITapeLoadProvider, ITapeSaveProvider
         {
             public bool CreateTapeFileInvoked { get; private set; }
             public bool SaveTzxBlockInvoked { get; private set; }
@@ -1232,7 +1233,7 @@ namespace DotnetSpectrumEngine.Core.Test.Devices.Tape
             /// <returns>BinaryReader instance to obtain the content from</returns>
             public BinaryReader GetTapeContent()
             {
-                throw new System.NotImplementedException();
+                return new BinaryReader(new MemoryStream());
             }
 
             public void CreateTapeFile()

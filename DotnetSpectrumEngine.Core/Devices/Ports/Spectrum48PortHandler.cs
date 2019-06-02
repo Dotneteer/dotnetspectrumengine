@@ -15,7 +15,7 @@ namespace DotnetSpectrumEngine.Core.Devices.Ports
         private IScreenDevice _screenDevice;
         private IBeeperDevice _beeperDevice;
         private IKeyboardDevice _keyboardDevice;
-        private ITapeDevice _tapeDevice;
+        private ITapeLoadDevice _tapeDevice;
         private bool _isUla3;
 
         private bool _bit3LastValue;

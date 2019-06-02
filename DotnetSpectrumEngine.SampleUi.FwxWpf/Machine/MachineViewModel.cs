@@ -34,19 +34,6 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         }
 
         /// <summary>
-        /// The name of the tape set that is to be used with the next LOAD command
-        /// </summary>
-        public string TapeSetName
-        {
-            get => _tapeSetName;
-            set
-            {
-                if (!Set(ref _tapeSetName, value)) return;
-                // TODO: Use this tape set later
-            }
-        }
-
-        /// <summary>
         /// Initializes the ZX Spectrum virtual machine
         /// </summary>
         public RelayCommand StartVmCommand { get; set; }
@@ -185,7 +172,7 @@ namespace DotnetSpectrumEngine.SampleUi.FwxWpf.Machine
         /// <param name="tapeSetName"></param>
         protected virtual void OnAssignTapeSet(string tapeSetName)
         {
-            TapeSetName = tapeSetName;
+            AppViewModel.TapeLoadProvider.ResourceName = $"TzxResources.{tapeSetName}";
         }
 
         #endregion

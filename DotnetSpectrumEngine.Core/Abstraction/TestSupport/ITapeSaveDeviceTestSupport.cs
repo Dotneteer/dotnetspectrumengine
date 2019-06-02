@@ -6,14 +6,8 @@ namespace DotnetSpectrumEngine.Core.Abstraction.TestSupport
     /// This interface defines the operations that support 
     /// the testing of a tape device.
     /// </summary>
-    public interface ITapeDeviceTestSupport
+    public interface ITapeSaveDeviceTestSupport
     {
-        /// <summary>
-        /// Sets the current tape mode according to the current PC register
-        /// and the MIC bit state.
-        /// </summary>
-        void SetTapeMode();
-
         /// <summary>
         /// The current operation mode of the tape
         /// </summary>

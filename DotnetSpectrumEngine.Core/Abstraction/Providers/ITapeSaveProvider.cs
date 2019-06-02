@@ -1,20 +1,13 @@
-﻿using System.IO;
-using DotnetSpectrumEngine.Core.Abstraction.Devices.Tape;
+﻿using DotnetSpectrumEngine.Core.Abstraction.Devices.Tape;
 
 namespace DotnetSpectrumEngine.Core.Abstraction.Providers
 {
     /// <summary>
     /// This interface describes the behavior of an object that
-    /// provides TZX/TAP tape content.
+    /// saves tape contents.
     /// </summary>
-    public interface ITapeProvider: IVmComponentProvider
+    public interface ITapeSaveProvider: IVmComponentProvider
     {
-        /// <summary>
-        /// Gets a binary reader that provides tape content
-        /// </summary>
-        /// <returns>BinaryReader instance to obtain the content from.</returns>
-        BinaryReader GetTapeContent();
-
         /// <summary>
         /// Creates a tape file with the specified name.
         /// </summary>

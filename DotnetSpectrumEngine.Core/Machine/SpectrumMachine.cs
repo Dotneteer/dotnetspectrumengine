@@ -75,7 +75,8 @@ namespace DotnetSpectrumEngine.Core.Machine
             RegisterProvider<IClockProvider>(() => new DefaultClockProvider());
             RegisterProvider<IRomProvider>(() => new DefaultRomProvider());
             RegisterProvider<IKeyboardProvider>(() => new DefaultKeyboardProvider());
-            RegisterProvider<ITapeProvider>(() => new DefaultTapeProvider());
+            RegisterProvider<ITapeLoadProvider>(() => new DefaultTapeLoadProvider());
+            RegisterProvider<ITapeSaveProvider>(() => new DefaultTapeSaveProvider());
             RegisterProvider<IBeeperProvider>(() => new NoAudioProvider());
             RegisterProvider<ISoundProvider>(() => new NoAudioProvider());
         }
@@ -276,7 +277,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
-                new TapeDeviceInfo(GetProvider<ITapeProvider>())
+                new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>())
             };
         }
 
@@ -296,7 +297,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
-                new TapeDeviceInfo(GetProvider<ITapeProvider>()),
+                new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>()),
                 new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
             };
         }
@@ -317,7 +318,7 @@ namespace DotnetSpectrumEngine.Core.Machine
                 new KeyboardDeviceInfo(GetProvider<IKeyboardProvider>(), new KeyboardDevice()),
                 new ScreenDeviceInfo(spectrumConfig.Screen),
                 new BeeperDeviceInfo(spectrumConfig.Beeper, GetProvider<IBeeperProvider>()),
-                new TapeDeviceInfo(GetProvider<ITapeProvider>()),
+                new TapeLoadDeviceInfo(GetProvider<ITapeLoadProvider>()),
                 new SoundDeviceInfo(spectrumConfig.Sound, GetProvider<ISoundProvider>())
             };
         }

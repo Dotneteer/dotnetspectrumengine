@@ -185,12 +185,17 @@ namespace DotnetSpectrumEngine.Core.Machine
         /// <summary>
         /// The tape device attached to the VM
         /// </summary>
-        public ITapeDevice TapeDevice { get; }
+        public ITapeLoadDevice TapeDevice { get; }
 
         /// <summary>
-        /// The tape device attached to the VM
+        /// The tape load provider attached to the VM
         /// </summary>
-        public ITapeProvider TapeProvider { get; }
+        public ITapeLoadProvider TapeLoadProvider { get; }
+
+        /// <summary>
+        /// The tape save provider attached to the VM
+        /// </summary>
+        public ITapeSaveProvider TapeSaveProvider { get; }
 
         /// <summary>
         /// The configuration of the floppy
@@ -301,10 +306,12 @@ namespace DotnetSpectrumEngine.Core.Machine
             InterruptDevice = new InterruptDevice(InterruptTact);
 
             // --- Init the tape device
-            var tapeInfo = GetDeviceInfo<ITapeDevice>();
-            TapeProvider = (ITapeProvider)tapeInfo?.Provider;
-            TapeDevice = tapeInfo?.Device
-                ?? new TapeDevice(TapeProvider);
+            var tapeSaveInfo = GetDeviceInfo<ITapeSaveDevice>();
+            TapeSaveProvider = (ITapeSaveProvider)tapeSaveInfo?.Provider;
+            var tapeLoadInfo = GetDeviceInfo<ITapeLoadDevice>();
+            TapeLoadProvider = (ITapeLoadProvider)tapeLoadInfo?.Provider;
+            TapeDevice = tapeLoadInfo?.Device
+                ?? new TapeDevice(TapeLoadProvider, TapeSaveProvider);
 
             // === Init optional devices
             // --- Init the sound device
@@ -336,7 +343,7 @@ namespace DotnetSpectrumEngine.Core.Machine
             AttachProvider(pixelRenderer);
             AttachProvider(BeeperProvider);
             AttachProvider(KeyboardProvider);
-            AttachProvider(TapeProvider);
+            AttachProvider(TapeLoadProvider);
             AttachProvider(DebugInfoProvider);
 
             // --- Attach optional providers
