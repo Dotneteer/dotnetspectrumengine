@@ -1,0 +1,57 @@
+﻿@inject IThemingService  ThemingService
+
+<svg class="svg-icon-component"
+     style="width:@_width;height:@_height;fill:@Fill;transform:rotate(@_rotate)"
+     xmlns="http://www.w3.org/2000/svg"
+     viewBox="@_viewBox">
+    <path d="@_path" />
+</svg>
+
+@functions {
+    private string _iconName;
+    private string _iconFill;
+    private int? _iconWidth;
+    private int? _iconHeight;
+    private IconInfo _iconInfo;
+
+    [Parameter]
+    public string IconName
+    {
+        get => _iconName;
+        set
+        {
+            _iconName = value;
+            _iconInfo = ThemingService.GetIcon(_iconName);
+        }
+    }
+
+    [Parameter]
+    public int Width
+    {
+        get => _iconWidth ?? ThemingService.GetProperty<int>(nameof(IThemeProperties.DefaultSvgIconSize));
+        set => _iconWidth = value;
+    }
+
+    [Parameter]
+    public int Height
+    {
+        get => _iconHeight ?? ThemingService.GetProperty<int>(nameof(IThemeProperties.DefaultSvgIconSize));
+        set => _iconHeight = value;
+    }
+
+    [Parameter]
+    public string Fill
+    {
+        get => _iconFill ?? ThemingService.GetProperty<string>(nameof(IThemeProperties.DefaultSvgFill));
+        set => _iconFill = value;
+    }
+
+    [Parameter]
+    public int Rotate { get; set; } = 0;
+
+    private string _path => _iconInfo.Path;
+    private string _viewBox => $"0 0 {_iconInfo.Width} {_iconInfo.Height}";
+    private string _width => $"{Width}px";
+    private string _height => $"{Height}px";
+    private string _rotate => $"{Rotate}deg";
+}

@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+using DotnetSpectrumEngine.Core.Abstraction;
 using DotnetSpectrumEngine.Core.Abstraction.Configuration;
 using DotnetSpectrumEngine.Core.Abstraction.Devices;
 using DotnetSpectrumEngine.Core.Abstraction.Devices.Screen;
@@ -24,7 +25,7 @@ namespace DotnetSpectrumEngine.Core.Machine
     /// <summary>
     /// This class represents a ZX Spectrum virtual machine
     /// </summary>
-    public class SpectrumMachine
+    public class SpectrumMachine : ISpectrumMachine
     {
         private readonly object _machineStateLocker = new object();
         private VmState _machineState;
@@ -570,9 +571,11 @@ namespace DotnetSpectrumEngine.Core.Machine
 
             // --- Set up the task that runs the machine
             MachineState = VmState.Running;
+            Console.WriteLine("Machine is about to start");
             try
             {
                 _completionTask = StartAndRun(_cancellationTokenSource.Token, options);
+                Console.WriteLine("Machine started");
             }
             catch (TaskCanceledException)
             {
@@ -724,6 +727,7 @@ namespace DotnetSpectrumEngine.Core.Machine
             var completed = false;
             while (!completed)
             {
+                Console.WriteLine("Next cycle starts");
                 // --- Execute a single CPU Frame
                 var lastCpuFrameStart = _clockProvider.GetCounter();
                 var cycleCompleted = _spectrumVm.ExecuteCycle(cancellationToken, options, true);
@@ -776,9 +780,12 @@ namespace DotnetSpectrumEngine.Core.Machine
                         // --- Wait for the next render frame, unless completed
                         if (!completed)
                         {
+                            var runInMs = LastRenderFrameTicks * 1000.0 /
+                                          _clockProvider.GetFrequency();
                             var waitInTicks = lastRunStart + frameCount * _physicalFrameClockCount 
                                 - _clockProvider.GetCounter() - _physicalFrameClockCount * 0.2;
                             var waitInMs = 1000.0 * waitInTicks / _clockProvider.GetFrequency();
+                            Console.WriteLine($"Wait for next frame: {runInMs}");
                             if (waitInMs > 0)
                             {
                                 await Task.Delay((int) waitInMs, cancellationToken);
@@ -786,6 +793,10 @@ namespace DotnetSpectrumEngine.Core.Machine
                                 {
                                     return ExecutionCompletionReason.Cancelled;
                                 }
+                            }
+                            else
+                            {
+                                await Task.Delay(1, cancellationToken);
                             }
                         }
                         break;

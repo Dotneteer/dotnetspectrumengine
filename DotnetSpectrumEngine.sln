@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetSpectrumEngine.Core.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotnetSpectrumEngine.SampleUi.FwxWpf", "DotnetSpectrumEngine.SampleUi.FwxWpf\DotnetSpectrumEngine.SampleUi.FwxWpf.csproj", "{B5F317AF-2238-476F-8B68-6F0CDBD580B4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetSpectrumEngine.SampleUi.Blazor.Server", "DotnetSpectrumEngine.SampleUi.Blazor.Server\DotnetSpectrumEngine.SampleUi.Blazor.Server.csproj", "{368D58AE-4BEA-431E-911D-40C9557E6793}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetSpectrumEngine.SampleUi.Blazor.Client", "DotnetSpectrumEngine.SampleUi.Blazor.Client\DotnetSpectrumEngine.SampleUi.Blazor.Client.csproj", "{D2F29548-41F4-4DB8-924C-58664231C07F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{B5F317AF-2238-476F-8B68-6F0CDBD580B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5F317AF-2238-476F-8B68-6F0CDBD580B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5F317AF-2238-476F-8B68-6F0CDBD580B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{368D58AE-4BEA-431E-911D-40C9557E6793}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{368D58AE-4BEA-431E-911D-40C9557E6793}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{368D58AE-4BEA-431E-911D-40C9557E6793}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{368D58AE-4BEA-431E-911D-40C9557E6793}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2F29548-41F4-4DB8-924C-58664231C07F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2F29548-41F4-4DB8-924C-58664231C07F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2F29548-41F4-4DB8-924C-58664231C07F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2F29548-41F4-4DB8-924C-58664231C07F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

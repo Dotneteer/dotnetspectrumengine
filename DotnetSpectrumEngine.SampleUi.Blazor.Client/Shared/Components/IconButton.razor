@@ -1,0 +1,94 @@
+﻿@inject IThemingService  ThemingService
+
+<div class="@_classValue"
+     title="@Title"
+     onclick="@DoClick"
+     onmousedown="@DoMouseDown"
+     onmouseup="@DoMouseUp"
+     onmouseout="@DoMouseUp"
+     onkeydown="@DoKeyDown">
+    <SvgIcon IconName="@IconName"
+             Width="@Width"
+             Height="@Height"
+             Fill="@_iconFill"
+             Rotate="@Rotate">
+    </SvgIcon>
+</div>
+
+@functions
+{
+    public const string DefaultIconButtonChrome = "icon-button-component";
+
+    [Parameter]
+    public string IconName { get; set; } = "play";
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public int Width { get; set; } = 16;
+
+    [Parameter]
+    public int Height { get; set; } = 16;
+
+    [Parameter]
+    public string Fill { get; set; }
+
+    [Parameter]
+    public int Rotate { get; set; } = 0;
+
+    [Parameter]
+    public string Chrome { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool ShowBorder { get; set; }
+
+    [Parameter]
+    public bool Focused { get; set; }
+
+    [Parameter]
+    EventCallback<EventArgs> OnClick { get; set; }
+
+    public bool Pressed;
+
+    private string _classValue =>
+    $"{Chrome ?? DefaultIconButtonChrome} " +
+    $"{C(Focused, nameof(Focused))} {C(Disabled, nameof(Disabled))} " +
+    $"{C(ShowBorder, nameof(ShowBorder))} {C(Pressed, nameof(Pressed))}";
+
+    private string _iconFill => Disabled
+        ? ThemingService.GetProperty<string>(nameof(IThemeProperties.IconButtonDisabledFill))
+        : Fill;
+
+    private string C(bool predicate, string className)
+        => predicate ? className.ToLower() : string.Empty;
+
+    void DoMouseDown()
+    {
+        Pressed = true;
+    }
+
+    void DoMouseUp()
+    {
+        Pressed = false;
+    }
+
+    async Task DoKeyDown(UIKeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "Space")
+        {
+            await DoClick();
+        }
+    }
+
+    async Task DoClick()
+    {
+        if (!Disabled)
+        {
+            await OnClick.InvokeAsync(EventArgs.Empty);
+        }
+    }
+}

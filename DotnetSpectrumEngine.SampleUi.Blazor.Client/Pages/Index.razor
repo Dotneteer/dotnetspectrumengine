@@ -1,0 +1,26 @@
+﻿@page "/"
+@inject IThemingService  ThemingService
+
+<div class="app-container-component" style="@_themeStyle">
+    <EmulatorCanvas/>
+</div>
+
+@functions
+{
+    private string _themeStyle => ThemingService.ComposeStyleAttributeFromTheme();
+
+    protected override void OnInit()
+    {
+        ThemingService.RegisterTheme(new ThemeInfo
+        {
+            Name = "dark",
+            Properties = StockThemes.DarkTheme
+        });
+        ThemingService.RegisterTheme(new ThemeInfo
+        {
+            Name = "light",
+            Properties = StockThemes.LightTheme
+        });
+        ThemingService.SetTheme("dark");
+    }
+}

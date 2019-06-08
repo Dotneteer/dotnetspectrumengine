@@ -1,0 +1,59 @@
+﻿@using DotnetSpectrumEngine.Core.Abstraction
+@implements IDisposable
+@inject ISpectrumMachine Machine
+
+<div class="emulator-canvas-component">
+    <EmulatorToolbar VmState="@VmState" OnClick="@OnCommandExecute" />
+</div>
+
+@functions {
+
+    public VmState VmState { get; set; }
+
+    async Task OnCommandExecute(EmuCommandEventArgs e)
+    {
+        Console.WriteLine($"Command: {e.Command}");
+        await Task.FromResult(0);
+        switch (e.Command)
+        {
+            case EmuCommands.PLAY:
+                Machine.Start();
+                break;
+            case EmuCommands.PAUSE:
+                await Machine.Pause();
+                break;
+            case EmuCommands.STOP:
+                await Machine.Stop();
+                break;
+            case EmuCommands.RESTART:
+                await Machine.Stop();
+                Machine.Start();
+                break;
+            case EmuCommands.DEBUG:
+                Machine.StartDebug();
+                break;
+            case EmuCommands.STEP_INTO:
+                Machine.StepInto();
+                break;
+            case EmuCommands.STEP_OVER:
+                Machine.StepOver();
+                break;
+        }
+    }
+
+    protected override void OnInit()
+    {
+        Machine.VmStateChanged += OnEmulatorStateChanged;
+    }
+
+    void OnEmulatorStateChanged(object sender, VmStateChangedEventArgs e)
+    {
+        VmState = e.NewState;
+        StateHasChanged();
+    }
+
+    void IDisposable.Dispose()
+    {
+        Machine.VmStateChanged -= OnEmulatorStateChanged;
+    }
+}

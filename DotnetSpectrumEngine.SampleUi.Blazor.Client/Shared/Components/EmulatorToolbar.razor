@@ -1,0 +1,117 @@
+﻿@using Microsoft.AspNetCore.Components
+
+@inject IThemingService  ThemingService
+
+<div class="emulator-toolbar-component">
+    <IconButton IconName="@EmuCommands.PLAY"
+                Fill="green"
+                title="Start (Ctrl+F5)"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canStart)"
+                OnClick="@(() => Execute(EmuCommands.PLAY))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.STOP"
+                Fill="orangered"
+                title="Stop"
+                Width="16"
+                Height="16"
+                Disabled="@(_canStop)"
+                OnClick="@(() => Execute(EmuCommands.STOP))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.PAUSE"
+                Fill="lightblue"
+                title="Pause"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canPause)"
+                OnClick="@(() => Execute(EmuCommands.PAUSE))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.RESTART"
+                Fill="silver"
+                title="Restart"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canRestart)"
+                OnClick="@(() => Execute(EmuCommands.RESTART))">
+    </IconButton>
+    <div class="separator"></div>
+    <IconButton IconName="@EmuCommands.DEBUG"
+                Fill="orange"
+                title="Start Debugging (F5)"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canStart)"
+                OnClick="@(() => Execute(EmuCommands.DEBUG))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.STEP_INTO"
+                Fill="silver"
+                title="Step into (F11)"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canDebug)"
+                OnClick="@(() => Execute(EmuCommands.STEP_INTO))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.STEP_OVER"
+                Fill="silver"
+                title="Step over (F10)"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canDebug)"
+                OnClick="@(() => Execute(EmuCommands.STEP_OVER))">
+    </IconButton>
+    <div class="separator"></div>
+    <IconButton IconName="@EmuCommands.OPEN_STATE"
+                Fill="silver"
+                title="Open VM state"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canDebug)"
+                OnClick="@(() => Execute(EmuCommands.OPEN_STATE))">
+    </IconButton>
+    <IconButton IconName="@EmuCommands.SAVE_STATE"
+                Fill="silver"
+                title="Save VM state"
+                Width="16"
+                Height="16"
+                Disabled="@(!_canDebug)"
+                OnClick="@(() => Execute(EmuCommands.SAVE_STATE))">
+    </IconButton>
+    <div class="separator"></div>
+    <IconButton IconName="@EmuCommands.KEYBOARD"
+                Fill="silver"
+                title="Show keyboard"
+                Width="16"
+                Height="16"
+                OnClick="@(() => Execute(EmuCommands.KEYBOARD))">
+    </IconButton>
+</div>
+
+@functions
+{
+    [Parameter]
+    public VmState VmState { get; set; } = VmState.None;
+
+    [Parameter]
+    EventCallback<EmuCommandEventArgs> OnClick { get; set; }
+
+    async Task Execute(string commandName)
+    {
+        await OnClick.InvokeAsync(new EmuCommandEventArgs(commandName));
+    }
+
+    private bool _canStart => VmState != VmState.Running
+        && VmState != VmState.Pausing
+        && VmState != VmState.Stopping;
+
+    private bool _canStop => VmState == VmState.Running
+        || VmState == VmState.Pausing
+        || VmState == VmState.Stopping;
+
+    private bool _canPause => VmState == VmState.Running;
+
+    private bool _canRestart => VmState == VmState.Running
+        || VmState == VmState.Paused;
+
+    private bool _canDebug => VmState == VmState.Paused;
+}

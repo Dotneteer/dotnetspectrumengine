@@ -1,0 +1,96 @@
+﻿// ============================================================================
+// General HTML styles
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe UI, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
+    overflow: hidden;
+    box-sizing: border-box;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    min-width: 100px;
+    min-height: 300px;
+}
+
+// ============================================================================
+// App container specific styles
+.app-container-component {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: 100%;
+    background-color: var(--shell-background-color);
+}
+
+// ============================================================================
+// SvgIcon component specific styles
+.svg-icon-component {
+    display: flex;
+}
+
+// ============================================================================
+// IconButton component specific styles
+.icon-button-component {
+    outline: none;
+    display: flex;
+    border: 1px solid transparent;
+    padding: 4px;
+    border-radius: 2px;
+
+    &.disabled {
+        border: 1px solid transparent !important;
+        background-color: transparent !important;
+    }
+
+    &:hover {
+        border: 1px solid var(--icon-button-hover-border-color);
+        background-color: var(--icon-button-hover-background-color);
+        transition: background-color 100ms ease-in-out;
+    }
+
+    &.focused {
+        border: 1px solid var(--icon-button-hover-border-color);
+        background-color: var(--icon-button-hover-background-color);
+    }
+
+    &.pressed {
+        border: var(--icon-button-pressed-border);
+    }
+}
+
+// ============================================================================
+// Emulator canvas component specific styles
+.emulator-canvas-component {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 0;
+    height: 100%;
+    width: 100%;
+}
+
+// ============================================================================
+// Emulator toolbar component specific styles
+.emulator-toolbar-component {
+    background-color: var(--tab-bar-background-color);
+    flex-shrink: 1;
+    flex-grow: 0;
+    flex-wrap: wrap;
+    display: flex;
+
+    & .separator {
+        flex-shrink: 0;
+        display: inline-block;
+        width: 8px;
+        height: 20px;
+        border-right: 2px solid var(--separator-border-color);
+        margin-top: 2px;
+        margin-right: 6px;
+        margin-bottom: 2px;
+        vertical-align: center;
+    }
+}
